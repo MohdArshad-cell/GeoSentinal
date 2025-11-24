@@ -5,7 +5,7 @@ import config
 def generate_synthetic_data(dyad_name="India-Pakistan"):
     np.random.seed(42)
     
-    # --- SET TIME RANGE ---
+    # --- SET TIME RANGE
     if dyad_name == "India-Pakistan":
         start, end = config.IND_PAK_START, config.IND_PAK_END
     elif dyad_name == "Russia-Ukraine":
