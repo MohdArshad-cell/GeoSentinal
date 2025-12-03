@@ -10,7 +10,6 @@ class IndexCalculator:
         Takes raw data and converts it into the final GPTI Index.
         """
         # 1. CALCULATE RAW NARRATIVE SCORE
-        # High Volume + Negative Sentiment = High Tension
         df['raw_narrative_score'] = df['narrative_volume'] * (1 - df['sentiment_score'])
         
         # 2. NORMALIZATION
@@ -53,20 +52,36 @@ class IndexCalculator:
 
     def test_causality(self, df, maxlag=5):
         """
-        Performs Granger Causality Test.
-        Null Hypothesis: Narrative does NOT cause Kinetic.
-        If p-value < 0.05, we REJECT null (Proof that Narrative -> Kinetic).
+        Performs Granger Causality Test with Safety Checks.
         """
-        # Data must be in columns [Target, Predictor]
-        # We want to see if Narrative (Predictor) causes Kinetic (Target)
-        test_data = df[['norm_kinetic', 'norm_narrative']]
-        
-        # Run test
-        # (verbose=False stops it from printing a messy table to the terminal)
-        results = grangercausalitytests(test_data, maxlag=maxlag, verbose=False)
-        
-        # We extract the P-Value for Lag 3 (assuming a 3-day delay effect)
-        # This is a dictionary lookup into the statsmodels result
-        p_value = results[3][0]['ssr_ftest'][1]
-        
-        return p_value
+        # --- SAFETY CHECK 1: Data Length ---
+        # We need at least (maxlag + 5) rows to run the test accurately.
+        if len(df) < (maxlag + 5):
+            return 1.0 # Return 1.0 (Not Significant) if data is too short
+
+        # Prepare Data
+        test_data = df[['norm_kinetic', 'norm_narrative']].copy()
+
+        # --- SAFETY CHECK 2: Clean NaNs/Infs ---
+        test_data.replace([np.inf, -np.inf], np.nan, inplace=True)
+        test_data.dropna(inplace=True)
+
+        # Re-check length after dropping NaNs
+        if len(test_data) < (maxlag + 5):
+            return 1.0
+
+        # --- SAFETY CHECK 3: Constant Data ---
+        # If a column is all zeros (no variance), the test will crash.
+        # We check if the standard deviation is 0.
+        if test_data['norm_kinetic'].std() == 0 or test_data['norm_narrative'].std() == 0:
+            return 1.0
+
+        try:
+            # Run test
+            results = grangercausalitytests(test_data, maxlag=maxlag, verbose=False)
+            # Extract P-Value for Lag 3
+            p_value = results[3][0]['ssr_ftest'][1]
+            return p_value
+        except Exception:
+            # If any other math error happens (e.g. singular matrix), fail safely
+            return 1.0
