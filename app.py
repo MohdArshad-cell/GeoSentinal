@@ -91,6 +91,21 @@ with st.sidebar:
         for col in cols_to_smooth:
             final_df[col] = final_df[col].rolling(window=smoothing).mean()
 
+    # D. DOWNLOAD REPORT
+    st.markdown("---")
+    st.subheader("💾 Mission Report")
+    
+    # Convert the dataframe to CSV string
+    csv_data = final_df.to_csv(index=False).encode('utf-8')
+    
+    st.download_button(
+        label="📥 Download Full Dataset (CSV)",
+        data=csv_data,
+        file_name=f'geosentinel_{selected_dyad.lower()}_report.csv',
+        mime='text/csv',
+        help="Export the kinetic, narrative, and AI-weighted scores for further analysis."
+    )
+
 # --- 5. DASHBOARD TABS ---
 tab_main, tab_deep, tab_ai, tab_about = st.tabs(["📈 Crisis Monitor", "🔬 Statistical Deep Dive", "🧠 Live AI Lab", "ℹ️ System Intel"])
 
@@ -141,6 +156,59 @@ with tab_main:
 
         fig.update_layout(height=600, template="plotly_dark", hovermode="x unified", margin=dict(l=0, r=0, t=40, b=0), legend=dict(orientation="h", y=1.02, yanchor="bottom", x=0, xanchor="left"))
         st.plotly_chart(fig, use_container_width=True)
+
+        # --- INTELLIGENCE DRILL-DOWN (Added Feature) ---
+        st.markdown("---")
+        st.subheader("🕵️‍♂️ Intelligence Drill-Down")
+        
+        c1, c2 = st.columns([1, 2])
+        
+        with c1:
+            # Default to the peak crisis date for the selected conflict
+            default_date = config.PULWAMA_ATTACK
+            if selected_dyad == "Russia-Ukraine": default_date = config.INVASION_START
+            if selected_dyad == "Israel-Palestine": default_date = config.OCT_7_ATTACK
+                
+            investigate_date = st.date_input(
+                "Select Date to Investigate:",
+                value=pd.to_datetime(default_date),
+                min_value=final_df['date'].min(),
+                max_value=final_df['date'].max()
+            )
+
+        with c2:
+            # Find data for that specific date
+            target_date = pd.to_datetime(investigate_date)
+            day_data = final_df[final_df['date'].dt.date == target_date.date()]
+            
+            if not day_data.empty:
+                gpti_val = day_data['GPTI'].values[0]
+                kin_val = day_data['kinetic_score'].values[0]
+                nar_val = day_data['narrative_volume'].values[0]
+                
+                # Generate a "Synthetic Situation Report" based on the score
+                if gpti_val > 80:
+                    status = "🔴 CRITICAL THREAT"
+                    desc = "Major escalation detected. Military forces engaging in direct combat. Global media saturation."
+                elif gpti_val > 50:
+                    status = "🟠 ELEVATED TENSION"
+                    desc = "Diplomatic channels stalling. Sharp rise in hostile rhetoric and border skirmishes."
+                else:
+                    status = "🟢 STABLE / ROUTINE"
+                    desc = "Standard border operations. No major incidents reported in the sector."
+
+                # Display the Report Card
+                st.info(f"**Status:** {status} | **Index Score:** {gpti_val:.1f}")
+                st.markdown(f"> *\"{desc}\"*")
+                
+                d1, d2, d3 = st.columns(3)
+                d1.metric("Kinetic Events", f"{int(kin_val)}")
+                d2.metric("News Volume", f"{int(nar_val)}")
+                d3.metric("AI Sentiment", f"{day_data['sentiment_score'].values[0]:.2f}")
+                
+            else:
+                st.warning("No intelligence data available for this date.")
+
     else:
         st.warning("No data available for the selected date range.")
 
