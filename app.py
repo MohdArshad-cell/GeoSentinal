@@ -293,7 +293,7 @@ with tab_main:
 with tab_map:
     st.header(f"🗺️ Geospatial Intel: {selected_dyad}")
     
-    # 1. Layout Configuration
+    # 1. Layout Configuration: Map on Left (3), Controls on Right (1)
     col_map, col_intel = st.columns([3, 1])
     
     with col_intel:
@@ -364,7 +364,7 @@ with tab_map:
 
             # C. Render Map with Tooltip
             st.pydeck_chart(pdk.Deck(
-                map_style='mapbox://styles/mapbox/dark-v10',
+                map_style=None, 
                 initial_view_state=pdk.ViewState(latitude=lat, longitude=lon, zoom=zoom, pitch=map_pitch),
                 layers=layers,
                 tooltip={
