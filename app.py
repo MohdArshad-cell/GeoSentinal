@@ -289,7 +289,6 @@ with tab_main:
 # ------------------------------------------
 # TAB 2: WAR ROOM MAP
 # ------------------------------------------
-# --- TAB 2: WAR ROOM MAP (UPGRADED) ---
 with tab_map:
     st.header(f"🗺️ Geospatial Intel: {selected_dyad}")
     
@@ -384,7 +383,6 @@ with tab_map:
 # ------------------------------------------
 # TAB 3: FORECAST
 # ------------------------------------------
-# --- TAB 3: FORECAST (UPGRADED) ---
 with tab_forecast:
     st.header("🔮 Predictive Early Warning System")
     st.markdown("AI-driven projection of conflict intensity over the next 30 days using **Holt-Winters Exponential Smoothing**.")
@@ -479,7 +477,6 @@ with tab_forecast:
 # ------------------------------------------
 # TAB 4: GLOBAL OVERWATCH
 # ------------------------------------------
-# --- TAB 4: GLOBAL OVERWATCH (UPGRADED) ---
 with tab_global:
     st.header("🌍 Global Risk Overwatch")
     st.markdown("Real-time comparative analysis of all monitored conflict zones.")
@@ -583,7 +580,6 @@ with tab_global:
 # ------------------------------------------
 # TAB 5: STATISTICAL DEEP DIVE
 # ------------------------------------------
-# --- TAB 5: STATISTICAL DEEP DIVE (UPGRADED) ---
 with tab_deep:
     st.header("🔬 Advanced Statistical Diagnostics")
     st.markdown("Rigorous validation of the causal relationship between **Narrative (Words)** and **Kinetic (War)**.")
@@ -679,7 +675,6 @@ with tab_deep:
 # ------------------------------------------
 # TAB 6: LIVE AI LAB
 # ------------------------------------------
-# --- TAB 6: ADVANCED AI LAB ---
 with tab_ai:
     st.header("🧠 Advanced Intelligence Lab")
     st.markdown("Direct uplink to the **Hybrid AI Engine**. Analyze raw intelligence feeds in real-time.")
