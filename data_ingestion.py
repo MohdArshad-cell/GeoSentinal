@@ -23,7 +23,6 @@ def generate_synthetic_data(dyad_name="India-Pakistan"):
     for current_date in date_range:
         
         # A. SET BASELINES (Peace Time Values)
-        # Different conflicts have different "normal" levels of violence
         if dyad_name == "Russia-Ukraine":
             kinetic_score = np.random.poisson(lam=5) # Higher base violence
             narrative_volume = int(np.random.normal(loc=100, scale=20))
@@ -38,8 +37,6 @@ def generate_synthetic_data(dyad_name="India-Pakistan"):
             sentiment_score = np.random.normal(loc=0.45, scale=0.1)
 
         # B. INJECT CRISIS EVENTS (The "History" Override)
-        # If the current date matches a known crisis date, force a spike.
-
         # --- Scenario 1: India-Pakistan ---
         if dyad_name == "India-Pakistan":
             if current_date == pd.to_datetime(config.PULWAMA_ATTACK):
@@ -66,7 +63,7 @@ def generate_synthetic_data(dyad_name="India-Pakistan"):
                 kinetic_score += np.random.randint(100, 200); narrative_volume += 1000; sentiment_score = 0.1
 
         # C. SAVE DAY'S DATA
-        sentiment_score = np.clip(sentiment_score, 0.0, 1.0) # Keep score between 0 and 1
+        sentiment_score = np.clip(sentiment_score, 0.0, 1.0)
         data.append({
             "date": current_date,
             "kinetic_score": kinetic_score,
@@ -76,21 +73,33 @@ def generate_synthetic_data(dyad_name="India-Pakistan"):
 
     return pd.DataFrame(data)
 
-# --- 3. MAIN BLOCK (Runs when you type 'python data_ingestion.py') ---
-if __name__ == "__main__":
-    # Generate and save ALL three datasets
-    print("🚀 Starting Data Generation Engine...")
+def generate_location_data(dyad_name, num_points):
+    """
+    Generates synthetic lat/lon points for the 'War Room' map.
+    """
+    np.random.seed(42) # Consistent map
     
-    df_ind_pak = generate_synthetic_data("India-Pakistan")
-    df_ind_pak.to_csv("india_pakistan_data.csv", index=False)
-    print("✅ Saved 'india_pakistan_data.csv'")
+    # Define bounding boxes (Lat, Lon) + Spread for each conflict
+    if dyad_name == "India-Pakistan":
+        # Centered on Line of Control (LOC), Kashmir
+        base_lat, base_lon = 34.0, 74.0 
+        lat_spread, lon_spread = 0.5, 0.5
+        zoom_level = 6
+        
+    elif dyad_name == "Russia-Ukraine":
+        # Centered on Donbas Region
+        base_lat, base_lon = 48.0, 38.0 
+        lat_spread, lon_spread = 1.5, 2.0
+        zoom_level = 5
+        
+    else: # Israel-Palestine
+        # Centered on Gaza/Israel Border
+        base_lat, base_lon = 31.4, 34.4 
+        lat_spread, lon_spread = 0.1, 0.1
+        zoom_level = 8
 
-    df_rus_ukr = generate_synthetic_data("Russia-Ukraine")
-    df_rus_ukr.to_csv("russia_ukraine_data.csv", index=False)
-    print("✅ Saved 'russia_ukraine_data.csv'")
-
-    df_isr_pal = generate_synthetic_data("Israel-Palestine")
-    df_isr_pal.to_csv("israel_palestine_data.csv", index=False)
-    print("✅ Saved 'israel_palestine_data.csv'")
+    # Generate random points (Gaussian distribution around the hotspot)
+    lats = np.random.normal(base_lat, lat_spread, num_points)
+    lons = np.random.normal(base_lon, lon_spread, num_points)
     
-    print("\n🎉 All datasets generated successfully!")
+    return pd.DataFrame({'lat': lats, 'lon': lons}), base_lat, base_lon, zoom_level
