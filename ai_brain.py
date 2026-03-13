@@ -1,10 +1,16 @@
 import os
 import json
 from groq import Groq
+from dotenv import load_dotenv # Add this library
 
-# --- CONFIGURATION ---
-# Replace with your actual key if not using environment variables
-API_KEY = "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" 
+# 1. Load the variables from a hidden .env file
+load_dotenv() 
+
+# 2. Access the key securely
+API_KEY = os.getenv("GROQ_API_KEY") 
+
+if not API_KEY:
+    raise ValueError("❌ Error: GROQ_API_KEY not found. Check your .env file.")
 
 client = Groq(api_key=API_KEY)
 
