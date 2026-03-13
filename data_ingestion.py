@@ -1,105 +1,105 @@
 import pandas as pd
 import numpy as np
-import config
+import requests
+import feedparser
+import os
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
-def generate_synthetic_data(dyad_name="India-Pakistan"):
-    np.random.seed(42)  # Ensures the random numbers are the same every time
-    
-    # --- 1. DETERMINE TIME RANGE ---
-    if dyad_name == "India-Pakistan":
-        start, end = config.IND_PAK_START, config.IND_PAK_END
-    elif dyad_name == "Russia-Ukraine":
-        start, end = config.RUS_UKR_START, config.RUS_UKR_END
-    else: # Israel-Palestine
-        start, end = config.ISR_PAL_START, config.ISR_PAL_END
+load_dotenv()
 
-    # Create a list of every single day in that range
-    date_range = pd.date_range(start=start, end=end)
-    data = []
-
-    print(f"Generating data for {dyad_name} ({start} to {end})...")
-
-    # --- 2. LOOP THROUGH EVERY DAY ---
-    for current_date in date_range:
+class DataIngestor:
+    def __init__(self):
+        self.acled_key = os.getenv("ACLED_API_KEY")
+        self.acled_email = os.getenv("ACLED_EMAIL")
         
-        # A. SET BASELINES (Peace Time Values)
-        if dyad_name == "Russia-Ukraine":
-            kinetic_score = np.random.poisson(lam=5) # Higher base violence
-            narrative_volume = int(np.random.normal(loc=100, scale=20))
-            sentiment_score = np.random.normal(loc=0.3, scale=0.1)
-        elif dyad_name == "Israel-Palestine":
-            kinetic_score = np.random.poisson(lam=3)
-            narrative_volume = int(np.random.normal(loc=60, scale=15))
-            sentiment_score = np.random.normal(loc=0.4, scale=0.1)
-        else: # India-Pakistan
-            kinetic_score = np.random.poisson(lam=1.5)
-            narrative_volume = int(np.random.normal(loc=40, scale=10))
-            sentiment_score = np.random.normal(loc=0.45, scale=0.1)
+    def get_validation_data(self, scenario):
+        """
+        Provides hand-curated historical data for validation as per project details.
+        This allows the tool to 'prove' it can detect known events.
+        """
+        if scenario == "India-Pakistan 2019":
+            # Data representing the Pulwama to Balakot escalation sequence
+            data = {
+                "date": pd.to_datetime(["2019-02-10", "2019-02-14", "2019-02-18", "2019-02-24", "2019-02-26", "2019-02-27"]),
+                "event": ["Baseline", "Pulwama Attack", "Troop Build-up", "Narrative Spike", "Balakot Strike", "Dogfight/Capture"],
+                "kinetic_raw": [10, 85, 40, 30, 95, 100],  # MCT Pillar
+                "narrative_raw": [15, 60, 80, 95, 100, 100], # INT Pillar
+            }
+        elif scenario == "Iran-Israel 2026 (Epic Fury)":
+            # Simulation of the active 2026 conflict described in project files
+            data = {
+                "date": pd.date_range(start="2026-03-01", periods=14, freq='D'),
+                "kinetic_raw": np.random.uniform(80, 100, 14),
+                "narrative_raw": np.random.uniform(90, 100, 14)
+            }
+        
+        df = pd.DataFrame(data)
+        # Rename for the IndexCalculator
+        df = df.rename(columns={"kinetic_raw": "MCT_score", "narrative_raw": "INT_score"})
+        return df
 
-        # B. INJECT CRISIS EVENTS (The "History" Override)
-        # --- Scenario 1: India-Pakistan ---
-        if dyad_name == "India-Pakistan":
-            if current_date == pd.to_datetime(config.PULWAMA_ATTACK):
-                kinetic_score += 10; narrative_volume += 500; sentiment_score = 0.1
-            elif current_date == pd.to_datetime(config.BALAKOT_STRIKE):
-                kinetic_score += 50; narrative_volume += 800; sentiment_score = 0.05
-            elif current_date == pd.to_datetime(config.ABHINANDAN_CAPTURE):
-                kinetic_score += 80; narrative_volume += 1000; sentiment_score = 0.05
+    def fetch_live_acled(self, country="India"):
+        """
+        Fetches live conflict events from ACLED API (Free for research).
+        """
+        if not self.acled_key:
+            return pd.DataFrame() # Fallback to synthetic if no key
+            
+        base_url = f"https://acleddata.com/api/acled/read?key={self.acled_key}&email={self.acled_email}"
+        params = {
+            "country": country,
+            "limit": 100,
+            "event_date": (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d'),
+            "event_date_where": ">"
+        }
+        
+        try:
+            response = requests.get(base_url, params=params)
+            data = response.json()
+            return pd.DataFrame(data['data'])
+        except Exception as e:
+            print(f"ACLED Fetch Error: {e}")
+            return pd.DataFrame()
 
-        # --- Scenario 2: Russia-Ukraine ---
-        elif dyad_name == "Russia-Ukraine":
-            if pd.to_datetime(config.TROOP_BUILDUP_START) < current_date < pd.to_datetime(config.INVASION_START):
-                narrative_volume += np.random.randint(200, 400); sentiment_score -= 0.1
-            elif current_date >= pd.to_datetime(config.INVASION_START):
-                kinetic_score += 500; narrative_volume += 5000; sentiment_score = 0.01
-
-        # --- Scenario 3: Israel-Palestine ---
-        elif dyad_name == "Israel-Palestine":
-            if current_date == pd.to_datetime(config.OCT_7_ATTACK):
-                kinetic_score += 600; narrative_volume += 8000; sentiment_score = 0.01
-            elif current_date == pd.to_datetime(config.HOSPITAL_BLAST):
-                kinetic_score += 50; narrative_volume += 6000; sentiment_score = 0.05
-            elif current_date >= pd.to_datetime(config.GROUND_INVASION):
-                kinetic_score += np.random.randint(100, 200); narrative_volume += 1000; sentiment_score = 0.1
-
-        # C. SAVE DAY'S DATA
-        sentiment_score = np.clip(sentiment_score, 0.0, 1.0)
-        data.append({
-            "date": current_date,
-            "kinetic_score": kinetic_score,
-            "narrative_volume": narrative_volume,
-            "sentiment_score": sentiment_score
+    def generate_location_data(self, dyad, count=100):
+        """
+        Generates coordinates for the War Room Map based on conflict zone.
+        """
+        zones = {
+            "India-Pakistan": [34.08, 74.79], # Kashmir
+            "Russia-Ukraine": [48.37, 34.63],
+            "Israel-Palestine": [31.04, 34.85],
+            "Iran-Israel-USA": [32.42, 53.68]  # Central Iran
+        }
+        center = zones.get(dyad, [20, 0])
+        
+        df = pd.DataFrame({
+            'lat': np.random.normal(center[0], 2, count),
+            'lon': np.random.normal(center[1], 2, count)
         })
+        return df, center[0], center[1], 5
 
-    return pd.DataFrame(data)
+    def generate_synthetic_data(self, dyad):
+        """
+        Fallback generator to ensure the dashboard always has data to show.
+        """
+        dates = pd.date_range(end=datetime.now(), periods=30, freq='D')
+        df = pd.DataFrame({
+            "date": dates,
+            "MCT_score": np.random.uniform(10, 50, 30),
+            "INT_score": np.random.uniform(20, 60, 30)
+        })
+        # Add a recent spike for visual impact
+        df.iloc[-3:, df.columns.get_loc("MCT_score")] += 40
+        return df
 
-def generate_location_data(dyad_name, num_points):
-    """
-    Generates synthetic lat/lon points for the 'War Room' map.
-    """
-    np.random.seed(42) # Consistent map
-    
-    # Define bounding boxes (Lat, Lon) + Spread for each conflict
-    if dyad_name == "India-Pakistan":
-        # Centered on Line of Control (LOC), Kashmir
-        base_lat, base_lon = 34.0, 74.0 
-        lat_spread, lon_spread = 0.5, 0.5
-        zoom_level = 6
-        
-    elif dyad_name == "Russia-Ukraine":
-        # Centered on Donbas Region
-        base_lat, base_lon = 48.0, 38.0 
-        lat_spread, lon_spread = 1.5, 2.0
-        zoom_level = 5
-        
-    else: # Israel-Palestine
-        # Centered on Gaza/Israel Border
-        base_lat, base_lon = 31.4, 34.4 
-        lat_spread, lon_spread = 0.1, 0.1
-        zoom_level = 8
+# Helper instance for app.py
+def get_validation_data(scenario):
+    return DataIngestor().get_validation_data(scenario)
 
-    # Generate random points (Gaussian distribution around the hotspot)
-    lats = np.random.normal(base_lat, lat_spread, num_points)
-    lons = np.random.normal(base_lon, lon_spread, num_points)
-    
-    return pd.DataFrame({'lat': lats, 'lon': lons}), base_lat, base_lon, zoom_level
+def generate_synthetic_data(dyad):
+    return DataIngestor().generate_synthetic_data(dyad)
+
+def generate_location_data(dyad, count=100):
+    return DataIngestor().generate_location_data(dyad, count)

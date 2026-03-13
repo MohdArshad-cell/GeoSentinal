@@ -1,23 +1,20 @@
-# config.py
+import os
+from dotenv import load_dotenv
 
-SYNTHETIC_MODE = True
+# .env file se keys load karne ke liye
+load_dotenv()
 
-# --- CONFLICT 1: INDIA-PAKISTAN (2019 Crisis) ---
-IND_PAK_START = "2018-01-01"
-IND_PAK_END = "2020-01-01"
-PULWAMA_ATTACK = "2019-02-14"
-BALAKOT_STRIKE = "2019-02-26"
-ABHINANDAN_CAPTURE = "2019-02-27"
+# --- API CONFIGURATIONS ---
+# ACLED Data (Kinetic Pillar)
+ACLED_EMAIL = os.getenv("ACLED_EMAIL", "your_email@example.com")
+ACLED_API_KEY = os.getenv("ACLED_API_KEY", "your_acled_key")
 
-# --- CONFLICT 2: RUSSIA-UKRAINE (2022 Invasion) ---
-RUS_UKR_START = "2021-01-01"
-RUS_UKR_END = "2023-01-01"
-TROOP_BUILDUP_START = "2021-11-01"
-INVASION_START = "2022-02-24"
+# Gemini AI (Relevance Filter)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "your_gemini_key")
 
-# --- CONFLICT 3: ISRAEL-PALESTINE (2023 Gaza War) ---
-ISR_PAL_START = "2023-01-01"
-ISR_PAL_END = "2024-01-01"
-OCT_7_ATTACK = "2023-10-07"      # Massive Kinetic & Narrative Shock
-HOSPITAL_BLAST = "2023-10-17"    # Narrative Spike (Al-Ahli Arab Hospital)
-GROUND_INVASION = "2023-10-27"   # Sustained Kinetic Rise
+# Groq AI (Optional / Alternative)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "your_groq_key")
+
+# --- APP SETTINGS ---
+APP_NAME = "GeoSentinal Commander"
+REFRESH_RATE = 60  # seconds
