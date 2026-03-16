@@ -1,6 +1,6 @@
 # AI-Driven Geopolitical Intelligence Platform
 
-![Banner](https://socialify.git.ci/repo_path/network?theme=Dark)
+
 
 ---
 
