@@ -6,13 +6,13 @@ from datetime import datetime
 from news_fetcher import NewsIntel
 from ai_brain import analyze_intelligence
 
-# --- ELITE CONFIGURATION ---
+# --- Update this in sentinel_system.py ---
 CONFLICT_THEATERS = {
-    "India-Pakistan 2019": "India Pakistan military border tension LoC",
-    "Russia-Ukraine 2022": "Russia Ukraine war offensive missile strike",
-    "Israel-Palestine 2023": "Gaza Israel conflict IDF Hamas military",
-    "Iran-Israel-US 2026": "Iran Israel US military escalation drone strike",
-    "Sudan Conflict 2023": "Sudan army RSF fighting Khartoum"
+    "INDIA-PAKISTAN": "India Pakistan military LoC news latest 2026",
+    "RUSSIA-UKRAINE": "Russia Ukraine war offensive frontline updates 2026",
+    "ISRAEL-PALESTINE": "Israel Gaza military operation Hezbollah escalation latest",
+    "IRAN-ISRAEL-US": "Iran Israel US drone strike missile tension news 2026",
+    "SUDAN CONFLICT": "Sudan army RSF fighting Khartoum updates today"
 }
 
 LOG_FILE = "live_intelligence_log.json"
@@ -56,9 +56,9 @@ def run_sentinel_cycle():
                 all_processed_intel.append(intel_packet)
             
             # --- CRITICAL FIX: PACING ---
-            # 7-8 seconds gap ensures we stay under 10 RPM (Requests Per Minute)
-            print(f"⏳ Pacing system... (7s)")
-            time.sleep(7) 
+            # 25 seconds gap ensures we stay under 10 RPM (Requests Per Minute)
+            print(f"⏳ Tactical Cool-down: 25s (Steady Flow Mode)")
+            time.sleep(25) 
 
     # 3. SMART LOGGING
     if all_processed_intel:
