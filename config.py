@@ -12,8 +12,6 @@ ACLED_API_KEY = os.getenv("ACLED_API_KEY", "your_acled_key")
 # Gemini AI (Relevance Filter)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "your_gemini_key")
 
-# Groq AI (Optional / Alternative)
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "your_groq_key")
 
 # --- APP SETTINGS ---
 APP_NAME = "GeoSentinal Commander"

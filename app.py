@@ -6,202 +6,151 @@ import pydeck as pdk
 from plotly.subplots import make_subplots
 import index_calculator
 import data_ingestion
-import config
-import json
+import advanced_modules 
 import os
 from datetime import datetime
-from streamlit_autorefresh import st_autorefresh
-import advanced_modules 
 
 # ==========================================
-# 1. PAGE CONFIGURATION
+# 1. CYBER-PUNK MILITARY UI CONFIG
 # ==========================================
-st.set_page_config(layout="wide", page_title="GeoSentinel Commander", page_icon="🛡️", initial_sidebar_state="expanded")
-st_autorefresh(interval=60 * 1000, key="data_refresh")
+st.set_page_config(layout="wide", page_title="GeoSentinel Command", page_icon="🛡️")
 
 st.markdown("""
 <style>
-    .main .block-container { padding-top: 1rem; padding-bottom: 3rem; }
-    h1, h2, h3 { color: #E63946; font-family: 'Helvetica Neue', sans-serif; font-weight: 700; }
-    .nav-header { color: #4CC9F0; font-weight: bold; margin-top: 20px;}
-    .cyber-text { color: #00FF41; font-family: 'Courier New', monospace; }
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+    .main { background-color: #0b0d11; color: #e0e0e0; }
+    h1, h2, h3 { font-family: 'Orbitron', sans-serif; color: #ff4b4b !important; text-transform: uppercase; letter-spacing: 2px; }
+    .stMetric { background-color: #1a1c23; border: 1px solid #3e4451; padding: 15px; border-radius: 10px; }
+    .sidebar .sidebar-content { background-image: linear-gradient(#1a1c23, #0b0d11); }
+    .css-10trblm { color: #ff4b4b !important; } /* Radio button color */
 </style>
 """, unsafe_allow_html=True)
 
-def load_live_intel():
-    log_file = "live_intelligence_log.json"
-    if os.path.exists(log_file):
-        try:
-            with open(log_file, 'r') as f:
-                return json.load(f)
-        except: return []
-    return []
-
-adv_features = advanced_modules.AdvancedFeatures()
-live_intel_data = load_live_intel()
-
 # ==========================================
-# 2. SIDEBAR NAVIGATION
+# 2. DATA ACQUISITION & PROCESSING
 # ==========================================
 with st.sidebar:
-    st.title("📡 Command Center")
-    st.markdown('<p class="nav-header">TARGET ACQUISITION</p>', unsafe_allow_html=True)
-    op_mode = st.radio("Mode:", ["Live Intelligence", "Historical Validation"], horizontal=True)
-    
-    if op_mode == "Live Intelligence":
-        selected_dyad = st.selectbox("Active Conflict Zone:", ["India-Pakistan", "Russia-Ukraine", "Israel-Palestine", "Iran-Israel-USA"])
-    else:
-        selected_benchmark = st.selectbox("Benchmark Scenario:", ["India-Pakistan 2019", "Iran-Israel 2026 (Epic Fury)"])
-
+    st.image("https://img.icons8.com/nolan/512/radar.png", width=100)
+    st.title("🛡️ GEOSENTINEL")
     st.markdown("---")
-    st.markdown('<p class="nav-header">SYSTEM MODULES</p>', unsafe_allow_html=True)
-    selected_module = st.radio("Select View:", [
-        "🗺️ 1. Multi-Domain Dashboard",
-        "🚨 2. Early Warning & Trajectory",
-        "📉 3. Economic & Cyber Impact",
-        "🧠 4. Info-War & PsyOps"
+    
+    # [FIX] Matching all 5 scenarios from generate_complete_benchmarks.py
+    scenarios = [
+        "India-Pakistan 2019", 
+        "Russia-Ukraine 2022", 
+        "Israel-Palestine 2023", 
+        "Sudan Conflict 2023", 
+        "Iran-Israel-US 2026"
+    ]
+    
+    selected_zone = st.selectbox("🎯 TARGET ACQUISITION:", scenarios)
+    
+    st.markdown("### 🖥️ SYSTEM VIEW")
+    selected_module = st.selectbox("SELECT MODULE:", [
+        "Strategic Overview",
+        "Lead-Lag Intelligence",
+        "Economic & Cyber Fallout",
+        "War Room Map"
     ])
-
-    st.markdown("---")
-    if st.button("🔄 Force Data Refresh", use_container_width=True): st.rerun()
-
-# ==========================================
-# 3. GLOBAL DATA PROCESSING
-# ==========================================
-if op_mode == "Historical Validation":
-    df = data_ingestion.get_validation_data(selected_benchmark)
-    current_zone = selected_benchmark
-else:
-    df = data_ingestion.generate_synthetic_data(selected_dyad)
-    current_zone = selected_dyad
-
-calculator = index_calculator.IndexCalculator()
-final_df = calculator.process_index(df)
-
-current_gpti = final_df['GPTI'].iloc[-1]
-gpti_trend = final_df['GPTI_Trend'].iloc[-1]
-latest_intel = live_intel_data[0] if (live_intel_data and op_mode == "Live Intelligence") else None
-
-st.title(f"{selected_module.split('.')[1].strip()} - {current_zone}")
-st.markdown("---")
-
-# ------------------------------------------
-# MODULE 1: MULTI-DOMAIN DASHBOARD (With Radar Chart)
-# ------------------------------------------
-if selected_module.startswith("🗺️ 1"):
-    c1, c2 = st.columns([2, 1])
     
-    with c1:
-        st.markdown("### 📈 Time-Series Tension Index (GPTI)")
-        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.7, 0.3], vertical_spacing=0.05)
-        fig.add_trace(go.Scatter(x=final_df['date'], y=final_df['GPTI'], name='GPTI Index', line=dict(color='#EF233C', width=3), fill='tozeroy'), row=1, col=1)
-        fig.add_trace(go.Scatter(x=final_df['date'], y=final_df['weight_kinetic'], name='MCT Weight (Kinetic)', line=dict(color='#4CC9F0')), row=2, col=1)
-        fig.update_layout(height=500, template="plotly_dark", margin=dict(l=20, r=20, t=30, b=20))
-        st.plotly_chart(fig, use_container_width=True)
+    st.markdown("---")
+    st.warning("⚠️ SYSTEM STATUS: DEFCON 3 (Elevated)")
 
-    with c2:
-        st.markdown("### 🕸️ Threat Matrix")
-        st.caption("Real-time distribution of conflict domains.")
-        matrix_data = adv_features.generate_threat_matrix(current_gpti, current_zone)
-        
-        categories = list(matrix_data.keys())
-        values = list(matrix_data.values())
-        # Close the loop for the radar chart
-        categories.append(categories[0])
-        values.append(values[0])
-        
-        fig_radar = go.Figure(data=go.Scatterpolar(
-            r=values, theta=categories, fill='toself', line_color='#EF233C', fillcolor='rgba(239, 35, 60, 0.4)'
-        ))
-        fig_radar.update_layout(
-            polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
-            showlegend=False, template="plotly_dark", height=450, margin=dict(l=40, r=40, t=30, b=20)
-        )
-        st.plotly_chart(fig_radar, use_container_width=True)
+# Data Loading
+df_raw = data_ingestion.get_validation_data(selected_zone)
+calc = index_calculator.IndexCalculator()
+final_df = calc.process_index(df_raw)
 
-    st.markdown("### 📍 Kinetic Geolocation Layer")
-    map_df, lat, lon, zoom = data_ingestion.generate_location_data(selected_dyad if op_mode == "Live Intelligence" else "India-Pakistan", 500)
+# Global Metrics
+current_gpti = final_df['GPTI'].iloc[-1]
+trend = final_df['GPTI_Trend'].iloc[-1]
+adv_features = advanced_modules.AdvancedFeatures()
+
+# ==========================================
+# 3. DYNAMIC MODULES
+# ==========================================
+
+# --- MODULE 1: STRATEGIC OVERVIEW ---
+if selected_module == "Strategic Overview":
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("GPTI INDEX", f"{current_gpti:.2f}", f"{trend:+.3f}", delta_color="inverse")
+    col2.metric("KINETIC WEIGHT", f"{final_df['weight_kinetic'].iloc[-1]:.2f}")
+    col3.metric("NARRATIVE WEIGHT", f"{final_df['weight_narrative'].iloc[-1]:.2f}")
+    col4.metric("ALERT LEVEL", "CRITICAL" if current_gpti > 0.75 else "ELEVATED" if current_gpti > 0.4 else "NOMINAL")
+
+    st.markdown("### 📉 MULTI-PILLAR TENSION TRAJECTORY")
+    fig = go.Figure()
+    # GPTI Line
+    fig.add_trace(go.Scatter(x=final_df['date'], y=final_df['GPTI'], name='GPTI (Aggregated)', 
+                             line=dict(color='#ff4b4b', width=4), fill='tozeroy'))
+    # MCT & INT Areas
+    fig.add_trace(go.Scatter(x=final_df['date'], y=final_df['MCT_norm'], name='MCT (Military)', 
+                             line=dict(color='#4CC9F0', width=1, dash='dot')))
+    fig.add_trace(go.Scatter(x=final_df['date'], y=final_df['INT_norm'], name='INT (Narrative)', 
+                             line=dict(color='#00FF41', width=1, dash='dot')))
+    
+    fig.update_layout(template="plotly_dark", height=500, margin=dict(l=10, r=10, t=50, b=10),
+                      legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+    st.plotly_chart(fig, use_container_width=True)
+
+# --- MODULE 2: LEAD-LAG INTELLIGENCE (NEW! BEST FOR VIVA) ---
+elif selected_module == "Lead-Lag Intelligence":
+    st.markdown("### 🧠 INFO-WAR LEAD-LAG ANALYSIS")
+    st.info("This module visualizes how Narrative Tension (INT) predicts Kinetic Escalation (MCT).")
+    
+    # 7-day Rolling correlation
+    final_df['correlation'] = final_df['INT_norm'].rolling(window=7).corr(final_df['MCT_norm'])
+    
+    col_a, col_b = st.columns([2, 1])
+    with col_a:
+        fig_corr = go.Figure()
+        fig_corr.add_trace(go.Scatter(x=final_df['date'], y=final_df['correlation'], name='INT-MCT Correlation',
+                                      line=dict(color='#FFD700', width=2), fill='tozeroy'))
+        fig_corr.update_layout(template="plotly_dark", title="Dynamic Coupling Score", height=400)
+        st.plotly_chart(fig_corr, use_container_width=True)
+    
+    with col_b:
+        st.markdown("#### 🚩 Strategic Briefing")
+        high_corr_dates = final_df[final_df['correlation'] > 0.8]['event'].unique()
+        if len(high_corr_dates) > 1:
+            st.write(f"System detected **Strong Coupling** during: *{', '.join([e for e in high_corr_dates if e != 'Routine Monitoring'][:3])}*")
+        else:
+            st.write("No strong lead-lag coupling detected in the current window.")
+
+# --- MODULE 3: ECONOMIC & CYBER FALLOUT ---
+elif selected_module == "Economic & Cyber Fallout":
+    st.markdown("### 💸 SECONDARY DOMAIN IMPACT")
+    impact = adv_features.get_economic_impact(current_gpti, selected_zone)
+    
+    c1, c2, c3 = st.columns(3)
+    for col, (key, data) in zip([c1, c2, c3], impact.items()):
+        with col:
+            st.metric(data['name'], f"{data['symbol']}{data['value']:,.2f}", f"{data['change']:+.2f}%", delta_color="inverse")
+            st.progress(abs(data['change']) / 10) # Visualizing risk
+            
+    st.markdown("---")
+    st.markdown("### ⚡ CYBER & INFRASTRUCTURE VULNERABILITY")
+    threat_matrix = adv_features.generate_threat_matrix(current_gpti, selected_zone)
+    cyber_val = threat_matrix["Cyber & Grid"]
+    st.slider("System Probe Intensity", 0, 100, int(cyber_val), disabled=True)
+    st.code(f"STATUS: {'CRITICAL OVERLOAD' if cyber_val > 80 else 'UNUSUAL ACTIVITY'} detected in regional data-centers.")
+
+# --- MODULE 4: WAR ROOM MAP ---
+elif selected_module == "War Room Map":
+    st.markdown("### 📍 TACTICAL GEOLOCATION (HEATMAP)")
+    map_df, lat, lon, zoom = data_ingestion.generate_location_data(selected_zone, 300)
+    
     st.pydeck_chart(pdk.Deck(
-        map_style='mapbox://styles/mapbox/dark-v10',
-        initial_view_state=pdk.ViewState(latitude=lat, longitude=lon, zoom=zoom, pitch=45),
-        layers=[pdk.Layer('HexagonLayer', data=map_df, get_position='[lon, lat]', radius=5000, elevation_scale=100, extruded=True)]
+        map_style='mapbox://styles/mapbox/satellite-v9',
+        initial_view_state=pdk.ViewState(latitude=lat, longitude=lon, zoom=zoom, pitch=50),
+        layers=[
+            pdk.Layer('HeatmapLayer', data=map_df, get_position='[lon, lat]', get_weight='intensity', radius_pixels=60),
+            pdk.Layer('ScatterplotLayer', data=map_df, get_position='[lon, lat]', get_color='[255, 75, 75, 160]', get_radius=2000)
+        ]
     ))
 
-# ------------------------------------------
-# MODULE 2: EARLY WARNING & TRAJECTORY
-# ------------------------------------------
-elif selected_module.startswith("🚨 2"):
-    alerts, status = adv_features.generate_alerts(current_gpti, gpti_trend)
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Current GPTI Score", f"{current_gpti:.2f}/1.00", f"{gpti_trend:.3f} slope")
-    c2.metric("System Trajectory", status)
-    
-    if latest_intel:
-        is_leading = adv_features.analyze_leading_indicators(latest_intel['headline'], current_zone)
-        c3.metric("OSINT Pre-War Indicators", "Detected" if is_leading else "Clear", "- Troop/Logistics Move" if is_leading else "")
-    else:
-        c3.metric("OSINT Pre-War Indicators", "Awaiting Data", "")
-
-    st.markdown("### 🔔 Automated Action Alerts")
-    if alerts:
-        for alert in alerts: st.error(alert)
-    else:
-        st.success("✅ System Nominal. No critical escalation thresholds breached.")
-
-# ------------------------------------------
-# MODULE 3: ECONOMIC & CYBER IMPACT
-# ------------------------------------------
-elif selected_module.startswith("📉 3"):
-    st.markdown("Simulating secondary conflict damage across Financial and Infrastructure domains.")
-    
-    # 1. Economic Data
-    st.markdown("### 🌐 Macro-Economic Fallout")
-    impact = adv_features.get_economic_impact(current_gpti, current_zone)
-    c1, c2, c3 = st.columns(3)
-    for col, key in zip([c1, c2, c3], impact.keys()):
-        data = impact[key]
-        with col:
-            st.info(f"**{data['name']}**")
-            st.metric(label="Current Est. Value", value=f"{data['symbol']}{data['value']:,.2f}", 
-                      delta=f"{data['change']:+.2f}%", delta_color="inverse" if "NIFTY" in data['name'] or "KSE" in data['name'] else "normal")
-            st.caption(f"**72-Hr Risk Projection:** {data['symbol']}{data['worst_case']:,.2f}") # Monte carlo projection
-
-    st.markdown("---")
-    
-    # 2. Cyber Threat Matrix
-    st.markdown("### 💻 Cyber Warfare & Critical Infrastructure")
-    matrix = adv_features.generate_threat_matrix(current_gpti, current_zone)
-    cyber_threat = matrix["Cyber & Grid"]
-    
-    st.progress(cyber_threat / 100)
-    st.markdown(f'<p class="cyber-text">CURRENT INFRASTRUCTURE PROBING SEVERITY: {cyber_threat:.1f}%</p>', unsafe_allow_html=True)
-    if cyber_threat > 75:
-        st.error("CRITICAL: Elevated DDoS activity detected on regional banking and ATC (Air Traffic Control) networks.")
-    elif cyber_threat > 50:
-        st.warning("ELEVATED: Unverified state-sponsored phishing campaigns targeting civilian grid operators.")
-
-# ------------------------------------------
-# MODULE 4: INFO-WAR & PSYOPS
-# ------------------------------------------
-elif selected_module.startswith("🧠 4"):
-    panic_idx, top_searches = adv_features.get_public_panic_index(current_gpti)
-    st.markdown("### 🕵️‍♂️ Narrative Integrity & Ground Pulse (PsyOps Detection)")
-    
-    colA, colB = st.columns(2)
-    with colA:
-        st.metric("Civilian Panic Index (Google Trends)", f"{panic_idx:.1f} / 100", f"{'Critical' if panic_idx > 75 else 'Elevated' if panic_idx > 50 else 'Normal'}")
-        st.caption(f"**Top Search Spikes:** '{top_searches[0]}', '{top_searches[1]}'")
-        
-    with colB:
-        if latest_intel:
-            bot_check = adv_features.analyze_information_integrity(latest_intel['sitrep'])
-            integrity_score = bot_check['integrity_score']
-            st.metric("OSINT Bot & Deepfake Check", f"{integrity_score}/100", bot_check['narrative_status'], delta_color="normal" if integrity_score > 70 else "inverse")
-            if bot_check['flags']: st.warning(f"🚩 **Flags:** {', '.join(bot_check['flags'])}")
-        else:
-            st.metric("OSINT Bot Check", "Awaiting Data", "")
-
-    if latest_intel:
-        st.markdown("---")
-        st.markdown("### 📡 Raw Intelligence Feed (LLM Processed)")
-        st.code(json.dumps(latest_intel, indent=4), language="json")
+# ==========================================
+# 4. FOOTER / LIVE FEED
+# ==========================================
+st.markdown("---")
+st.caption(f"🛡️ GeoSentinel Framework | Operator: Mohd Arshad | System Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")

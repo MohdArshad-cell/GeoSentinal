@@ -1,85 +1,58 @@
 import config
-# We import 'pipeline' to use pre-made AI models easily
 from transformers import pipeline
+import ai_brain 
+import pandas as pd
 
 class NarrativeAI:
     def __init__(self):
-        print("🧠 Initializing the AI Engine...")
-        
-        # 1. Load the "Judge" (Sentiment Analyzer)
-        # We use DistilBERT because it's fast and accurate.
-        # It downloads a pre-trained brain from HuggingFace.
+        # 1. Hardware acceleration check (GPU agar hai toh use karo)
         self.sentiment_analyzer = pipeline(
             "sentiment-analysis", 
-            model="distilbert-base-uncased-finetuned-sst-2-english"
+            model="distilbert-base-uncased-finetuned-sst-2-english",
+            device=-1 # Set to 0 if you have NVIDIA GPU
         )
+        self.confidence_threshold = 0.85 # [PRO] Sirf high-confidence signals uthayenge
 
-    def llm_relevance_filter(self, text_snippet):
+    def process_batch_intelligence(self, df, current_zone):
         """
-        THE BOUNCER: Decides if text is relevant.
-        In a real app, this calls GPT-4.
+        [ELITE FEATURE] Poore news batch ko ek saath analyze karta hai.
+        Relevance (Gemini) + Sentiment (DistilBERT) + Confidence Filtering.
         """
-        # [cite_start]The EXACT prompt from your research paper [cite: 644]
-        system_prompt = """
-        You are a geopolitical analyst specializing in South Asia. 
-        Your task is to determine if the following text is relevant to genuine 
-        geopolitical tension between India and Pakistan. 
-        Geopolitical tension refers to military, diplomatic, or political conflicts. 
-        It does NOT include cultural events, sports, or routine trade. 
-        Does this article discuss genuine India-Pakistan geopolitical tension? 
-        Answer ONLY with 'Yes' or 'No'.
-        """
+        results = []
         
-        # --- SIMULATION LOGIC ---
-        # Since we are in "Dev Mode" without a live GPT-4 key, 
-        # we simulate the Bouncer's logic with simple keywords for now.
-        keywords_to_ignore = ["cricket", "match", "movie", "song", "festival"]
-        
-        # If any "noise" word is in the text, the Bouncer says NO.
-        for word in keywords_to_ignore:
-            if word in text_snippet.lower():
-                return False # Kick it out!
+        for _, row in df.iterrows():
+            # Step 1: Smart Filter via Gemini
+            is_relevant, intel = ai_brain.analyze_intelligence(row['title'], row['source'], current_zone)
+            
+            if is_relevant:
+                # Step 2: Local Sentiment Engine
+                sentiment = self.sentiment_analyzer(row['title'])[0]
                 
-        return True # Let it in!
-
-    def get_sentiment_score(self, text_snippet):
-        """
-        THE JUDGE: Reads the text and gives a score.
-        """
-        # Ask the AI model to read the text
-        result = self.sentiment_analyzer(text_snippet)[0]
+                # Step 3: Confidence Filtering
+                # Agar AI confused hai, toh hum 'Noise' risk nahi lenge.
+                if sentiment['score'] >= self.confidence_threshold:
+                    # Final Tension Score (Inverting if positive)
+                    final_score = sentiment['score'] if sentiment['label'] == 'NEGATIVE' else (1 - sentiment['score'])
+                    
+                    results.append({
+                        "date": row['date'],
+                        "headline": row['title'],
+                        "raw_intensity": final_score,
+                        "confidence": sentiment['score'],
+                        "sitrep": intel.get('sitrep', 'No SitRep available'),
+                        "reasoning": intel.get('reasoning', 'Strategic context analyzed') # XAI Feature
+                    })
         
-        # The model returns 'POSITIVE' or 'NEGATIVE' with a confidence score.
-        label = result['label']
-        score = result['score']
-        
-        # We convert this to a simple number:
-        # 0.0 = Very Hostile/Negative
-        # 1.0 = Very Peaceful/Positive
-        if label == 'NEGATIVE':
-            return 1 - score  # Example: High confidence negative = low score (0.1)
-        else:
-            return score      # Example: High confidence positive = high score (0.9)
+        return pd.DataFrame(results)
 
-# --- TEST DRIVE ---
-# Let's test our Brain on two fake headlines to see if it works.
+# --- COMMANDER'S TEST DRIVE ---
 if __name__ == "__main__":
-    brain = NarrativeAI()
+    engine = NarrativeAI()
+    test_data = pd.DataFrame([
+        {"date": "2026-04-01", "title": "Massive artillery mobilization detected at Punjab border", "source": "OSINT_Sat"},
+        {"date": "2026-04-01", "title": "India-Pak cricket fans celebrate peace match", "source": "Sports_Daily"}
+    ])
     
-    # Example 1: Irrelevant Noise
-    news1 = "India beats Pakistan in thrilling T20 Cricket Match!"
-    
-    # Example 2: Real Tension
-    news2 = "Military forces exchange fire at the Line of Control, tensions rise."
-    
-    print(f"\n📰 News 1: '{news1}'")
-    if brain.llm_relevance_filter(news1):
-        print("❌ Bouncer: Let it in.")
-    else:
-        print("✅ Bouncer: Blocked! (Irrelevant)")
-        
-    print(f"\n📰 News 2: '{news2}'")
-    if brain.llm_relevance_filter(news2):
-        print("✅ Bouncer: Let it in. (Relevant)")
-        score = brain.get_sentiment_score(news2)
-        print(f"⚖️ Judge: Sentiment Score is {score:.2f} (Low means Hostile)")
+    print("🚀 PRO-PROCESSING INITIATED...")
+    intelligence_report = engine.process_batch_intelligence(test_data, "India-Pakistan 2019")
+    print(intelligence_report)

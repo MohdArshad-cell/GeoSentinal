@@ -1,11 +1,23 @@
+# --- CORE UI & DASHBOARD ---
 streamlit
 streamlit-autorefresh
-pandas
-numpy
 plotly
 pydeck
-feedparser
-transformers
-statsmodels
+
+# --- DATA PROCESSING & MATH ---
+pandas
+numpy
 scikit-learn
+statsmodels
+scipy
+
+# --- AI & NATURAL LANGUAGE PROCESSING ---
+google-generativeai
+transformers
+torch --index-url https://download.pytorch.org/whl/cpu 
+# Note: Using CPU version to keep the environment light
+
+# --- DATA INGESTION & UTILS ---
+requests
+feedparser
 python-dotenv
