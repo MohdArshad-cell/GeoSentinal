@@ -273,93 +273,333 @@ m_col3.metric("OSINT CONFIDENCE", "94.2%", "Optimized")
 m_col4.metric("SYSTEM UPTIME", "100%", "Secure")
 
 st.markdown("---")
+tab1, tab2, tab3 = st.tabs([
+    "🛰️ LIVE SURVEILLANCE", 
+    "📊 CONFLICT ANALYTICS", 
+    "🔮 COMMANDER'S SIM"
+])
 
 # ==========================================
-# 7. SITUATIONAL AWARENESS GRID
+# TAB 1: LIVE SURVEILLANCE (The Current Reality)
 # ==========================================
-col_map, col_intel = st.columns([2.2, 1])
+with tab1:
+    # --- Tactical Awareness Grid ---
+    col_map, col_intel = st.columns([2.2, 1])
 
-with col_map:
-    st.markdown("### 📍 TACTICAL DEPLOYMENT HEATMAP (3D)")
+    with col_map:
+        st.markdown("### 📍 TACTICAL DEPLOYMENT HEATMAP (3D)")
+        
+        try:
+            # data_ingestion se real coordinates uthao
+            map_df, lat, lon, zoom = data_ingestion.generate_location_data(selected_zone)
+            
+            # 3D Hexagon Layer Logic
+            layer = pdk.Layer(
+                "HexagonLayer",
+                data=map_df,
+                get_position='[lon, lat]',
+                auto_highlight=True,
+                elevation_scale=500,
+                pickable=True,
+                extruded=True,
+                coverage=1,
+                radius=20000,
+                get_fill_color="[255, (1 - intensity) * 255, 0, 150]",
+            )
+
+            # Direct link to Dark Matter tiles (No API Key required)
+            st.pydeck_chart(pdk.Deck(
+                layers=[layer],
+                initial_view_state=pdk.ViewState(
+                    latitude=lat, 
+                    longitude=lon, 
+                    zoom=zoom, 
+                    pitch=45
+                ),
+                map_style="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+                tooltip={"text": "Conflict Intensity: {elevationValue}"}
+            ))
+            
+        except Exception as e:
+            st.error(f"📡 Intelligence Map Offline: Verify Connection.")
+            print(f"DEBUG ERROR: {e}")
+
+    with col_intel:
+        st.markdown("### 🧠 AI STRATEGIC REPORTS")
+        
+        if os.path.exists("live_intelligence_log.json"):
+            with open("live_intelligence_log.json", 'r') as f:
+                try:
+                    logs = json.load(f)
+                    relevant = [l for l in logs if l.get('zone') == selected_zone][:4]
+                    
+                    if not relevant: 
+                        st.info("No active signals in this theater. Scanning...")
+                    
+                    for log in relevant:
+                        integrity = log.get('integrity_score', 100)
+                        # Dynamic color for integrity badge
+                        badge_clr = "#064e3b" if integrity > 70 else "#78350f" if integrity > 40 else "#7f1d1d"
+                        
+                        st.markdown(f"""
+                        <div class="intel-card">
+                            <span class="propaganda-flag" style="background:{badge_clr}; color:white;">SCORE: {integrity}</span>
+                            <small style='color:#8b949e;'>{log.get('timestamp', '')[:16]}</small><br>
+                            <strong style='color:#f0f6fc;'>{log.get('headline', '')}</strong><br>
+                            <p style='color:#00ff41; font-size:13px; margin-top:5px;'>⚡ {log.get('sitrep', '')}</p>
+                            <div style='border-top: 1px solid #30363d; padding-top: 5px; margin-top: 5px;'>
+                                <small style='color:#8b949e;'><b>NEXT:</b> {log.get('options', ['Review'])[0]}</small>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.warning("⚠️ Intel Packet Corrupted.")
+        else:
+            st.warning("⚠️ Intelligence Log Missing.")
+
+
+
+# ==========================================
+# TAB 2: CONFLICT ANALYTICS (The Research)
+# ==========================================
+with tab2:
+    # --- 8. CONFLICT GRAVITY & PREDICTION ---
+    st.subheader("📉 CONFLICT GRAVITY & PREDICTION HORIZON")
     
     try:
-        # data_ingestion se real coordinates uthao
-        map_df, lat, lon, zoom = data_ingestion.generate_location_data(selected_zone)
+        # Fetching last 30 intervals for the trend
+        chart_data = final_df.tail(30)
         
-        # Hexagon Layer Logic
-        layer = pdk.Layer(
-            "HexagonLayer",
-            data=map_df,
-            get_position='[lon, lat]',
-            auto_highlight=True,
-            elevation_scale=500,
-            pickable=True,
-            extruded=True,
-            coverage=1,
-            radius=20000,
-            get_fill_color="[255, (1 - intensity) * 255, 0, 150]",
-        )
+        # Prediction Logic (Future Trajectory)
+        last_val = chart_data['GPTI'].iloc[-1]
+        # Projecting next 3 intervals using the trend calculated in index_calculator
+        prediction_points = [last_val + (trend * i) for i in range(1, 4)]
+        pred_dates = pd.date_range(start=chart_data['date'].iloc[-1], periods=4, freq='H')[1:]
 
-        # --- THE BULLETPROOF FIX: DIRECT STYLE URL ---
-        # No Mapbox Key needed. No Pydeck constant needed.
-        st.pydeck_chart(pdk.Deck(
-            layers=[layer],
-            initial_view_state=pdk.ViewState(
-                latitude=lat, 
-                longitude=lon, 
-                zoom=zoom, 
-                pitch=45
-            ),
-            # Direct link to Dark Matter tiles
-            map_style="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-            tooltip={"text": "Conflict Intensity: {elevationValue}"}
+        # --- PLOTLY ENGINE ---
+        fig = go.Figure()
+
+        # Narrative Bars
+        fig.add_trace(go.Bar(
+            x=chart_data['date'], y=chart_data['INT_norm'], 
+            name="Narrative Pressure", marker_color='rgba(0, 255, 65, 0.2)'
         ))
         
+        # Kinetic Bars
+        fig.add_trace(go.Bar(
+            x=chart_data['date'], y=chart_data['MCT_norm'], 
+            name="Kinetic Load", marker_color='rgba(76, 201, 240, 0.2)'
+        ))
+        
+        # Total GPTI Line
+        fig.add_trace(go.Scatter(
+            x=chart_data['date'], y=chart_data['GPTI'], 
+            name="Total Index (GPTI)", 
+            line=dict(color='#ff4b4b', width=4, shape='spline'), 
+            fill='tozeroy', fillcolor='rgba(255, 75, 75, 0.1)'
+        ))
+        
+        # Prediction Dotted Line
+        fig.add_trace(go.Scatter(
+            x=pred_dates, y=prediction_points, 
+            name="Predictive Trajectory", 
+            line=dict(color='#ffffff', width=2, dash='dot'), 
+            mode='lines+markers'
+        ))
+
+        fig.update_layout(
+            template="plotly_dark", 
+            hovermode="x unified", 
+            barmode='overlay', 
+            paper_bgcolor='rgba(0,0,0,0)', 
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=0, r=0, t=30, b=0),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        
     except Exception as e:
-        # User-friendly error for non-tech jury members
-        st.error(f"📡 Intelligence Map Offline: Verify Internet Connection.")
-        print(f"DEBUG ERROR: {e}")
+        st.error(f"Error rendering Gravity Chart: {e}")
 
-with col_intel:
-    st.subheader("🧠 AI STRATEGIC REPORTS")
-    if os.path.exists("live_intelligence_log.json"):
-        with open("live_intelligence_log.json", 'r') as f:
-            logs = json.load(f)
-            relevant = [l for l in logs if l.get('zone') == selected_zone][:4]
-            if not relevant: st.info("No active signals in this theater.")
-            for log in relevant:
-                integrity = log.get('integrity_score', 100)
-                badge_clr = "#064e3b" if integrity > 70 else "#78350f" if integrity > 40 else "#7f1d1d"
-                st.markdown(f"""
-                <div class="intel-card">
-                    <span class="propaganda-flag" style="background:{badge_clr}; color:white;">SCORE: {integrity}</span>
-                    <small style='color:#8b949e;'>{log.get('timestamp', '')[:16]}</small><br>
-                    <strong style='color:#f0f6fc;'>{log.get('headline', '')}</strong><br>
-                    <p style='color:#00ff41; font-size:13px;'>⚡ {log.get('sitrep', '')}</p>
-                    <div style='border-top: 1px solid #30363d; padding-top: 5px;'><small><b>NEXT:</b> {log.get('options', ['Review'])[0]}</small></div>
-                </div>
-                """, unsafe_allow_html=True)
+    st.markdown("---")
+
+    # --- 14. HISTORICAL ECHO (CRISIS BENCHMARKING) ---
+    st.subheader("📜 HISTORICAL ECHO: CRISIS BENCHMARKING")
+
+    # --- RESEARCH-BASED HISTORICAL DATA ---
+    HISTORICAL_CRISES = {
+        "Russia-Ukraine (Feb 2022)": 0.96,
+        "Balakot Air Strikes (Feb 2019)": 0.84,
+        "Israel-Hamas Escalation (Oct 2023)": 0.89,
+        "Galwan Valley Clash (June 2020)": 0.78,
+        "Cuban Missile Crisis (Estimated)": 0.98
+    }
+
+    # Dynamic Comparison
+    current_data = {"CURRENT: " + selected_zone: gpti_val}
+    all_benchmarks = {**HISTORICAL_CRISES, **current_data}
+    sorted_benchmarks = dict(sorted(all_benchmarks.items(), key=lambda item: item[1]))
+
+    # --- HORIZONTAL BAR CHART ---
+    fig_echo = go.Figure()
+    
+    # Highlight current theater in Red
+    colors = ['rgba(48, 54, 61, 0.6)'] * len(sorted_benchmarks)
+    try:
+        current_idx = list(sorted_benchmarks.keys()).index("CURRENT: " + selected_zone)
+        colors[current_idx] = '#ff4b4b'
+    except: pass
+
+    fig_echo.add_trace(go.Bar(
+        y=list(sorted_benchmarks.keys()),
+        x=list(sorted_benchmarks.values()),
+        orientation='h',
+        marker_color=colors,
+        text=[f"{v:.2f}" for v in sorted_benchmarks.values()],
+        textposition='auto'
+    ))
+
+    fig_echo.update_layout(
+        template="plotly_dark",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=0, r=20, t=20, b=0),
+        xaxis=dict(title="GPTI Intensity Scale", range=[0, 1.1], gridcolor='#30363d'),
+        height=400
+    )
+    st.plotly_chart(fig_echo, use_container_width=True)
+
+    # --- ANALYST INSIGHT BOX ---
+    closest_crisis = min(HISTORICAL_CRISES, key=lambda x: abs(HISTORICAL_CRISES[x] - gpti_val))
+    proximity = (1 - abs(HISTORICAL_CRISES[closest_crisis] - gpti_val)) * 100
+
+    st.markdown(f"""
+        <div style="background: rgba(76, 201, 240, 0.1); border-left: 5px solid #4CC9F0; padding: 15px; border-radius: 5px;">
+            <span style="color: #4CC9F0; font-weight: bold;">📜 ANALYTICAL ECHO:</span> 
+            The current situation in <b>{selected_zone}</b> shows a <b>{proximity:.1f}%</b> statistical similarity 
+            to the peak of <b>{closest_crisis}</b>.
+        </div>
+    """, unsafe_allow_html=True)
+
+
 
 # ==========================================
-# 8. CONFLICT GRAVITY & PREDICTION
+# TAB 3: COMMANDER'S SIM (The Future)
 # ==========================================
-st.markdown("---")
-st.subheader("📉 CONFLICT GRAVITY & PREDICTION HORIZON")
+with tab3:
+    # --- 11. STRATEGIC SCENARIO SIMULATOR ---
+    st.markdown("---")
+    st.subheader("🔮 STRATEGIC SCENARIO SIMULATOR (WAR-GAMING)")
+    st.markdown("""
+    <div style="background: rgba(0, 255, 65, 0.05); padding: 10px; border-radius: 5px; border: 1px solid #00ff4133;">
+        <small style="color: #00ff41;">OPERATIONAL NOTE: Adjust sliders to simulate hypothetical escalation and observe the impact on the Global Geopolitical Tension Index (GPTI).</small>
+    </div>
+    """, unsafe_allow_html=True)
 
-chart_data = final_df.tail(30)
-# Prediction logic
-last_val = chart_data['GPTI'].iloc[-1]
-prediction_points = [last_val + (trend * i) for i in range(1, 4)]
-pred_dates = pd.date_range(start=chart_data['date'].iloc[-1], periods=4, freq='H')[1:]
+    with st.container():
+        col_sim_left, col_sim_right = st.columns([1, 1.5])
 
-fig = go.Figure()
-fig.add_trace(go.Bar(x=chart_data['date'], y=chart_data['INT_norm'], name="Narrative Pressure", marker_color='rgba(0, 255, 65, 0.2)'))
-fig.add_trace(go.Bar(x=chart_data['date'], y=chart_data['MCT_norm'], name="Kinetic Load", marker_color='rgba(76, 201, 240, 0.2)'))
-fig.add_trace(go.Scatter(x=chart_data['date'], y=chart_data['GPTI'], name="Total Index (GPTI)", line=dict(color='#ff4b4b', width=4), fill='tozeroy'))
-fig.add_trace(go.Scatter(x=pred_dates, y=prediction_points, name="Prediction", line=dict(color='#ffffff', dash='dot')))
+        with col_sim_left:
+            st.markdown("<br>", unsafe_allow_html=True)
+            # Tactical Sliders based on current normalization
+            sim_kinetic = st.slider("Simulated Kinetic Activity (MCT):", 0.0, 1.0, float(latest['MCT_norm']), 
+                                    help="Simulate increase in troop deployments, border skirmishes, or drone strikes.")
+            
+            sim_narrative = st.slider("Simulated Narrative Pressure (INT):", 0.0, 1.0, float(latest['INT_norm']), 
+                                      help="Simulate a massive surge in hostile state media reporting or cyber-propaganda.")
+            
+            sim_horizon = st.select_slider("Projection Horizon:", options=["Immediate", "48h Short-term", "7-Day Tactical"], value="48h Short-term")
 
-fig.update_layout(template="plotly_dark", hovermode="x unified", barmode='overlay', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-st.plotly_chart(fig, use_container_width=True)
+        # --- SIMULATION MATH (PCA-WEIGHTED) ---
+        # Formula: sim_gpti = (w1 * sim_kinetic) + (w2 * sim_narrative)
+        sim_gpti = (sim_kinetic * 0.65) + (sim_narrative * 0.35) 
+        escalation_delta = sim_gpti - gpti_val
+
+        with col_sim_right:
+            # Gauge Visual for Simulation Impact
+            sim_fig = go.Figure(go.Indicator(
+                mode = "gauge+number+delta",
+                value = sim_gpti,
+                domain = {'x': [0, 1], 'y': [0, 1]},
+                title = {'text': "PROJECTED INTENSITY", 'font': {'size': 18, 'color': '#00ff41'}},
+                delta = {'reference': gpti_val, 'increasing': {'color': "#ff4b4b"}, 'decreasing': {'color': "#00ff41"}},
+                gauge = {
+                    'axis': {'range': [0, 1], 'tickwidth': 1, 'tickcolor': "#00ff41"},
+                    'bar': {'color': "#ff4b4b" if escalation_delta > 0 else "#00ff41"},
+                    'bgcolor': "rgba(0,0,0,0)",
+                    'borderwidth': 2,
+                    'bordercolor': "#30363d",
+                    'steps': [
+                        {'range': [0, 0.4], 'color': 'rgba(0, 255, 65, 0.1)'},
+                        {'range': [0.4, 0.7], 'color': 'rgba(255, 255, 0, 0.1)'},
+                        {'range': [0.7, 1], 'color': 'rgba(255, 75, 75, 0.1)'}
+                    ],
+                }
+            ))
+            sim_fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', font={'color': "white", 'family': 'Share Tech Mono'}, height=350, margin=dict(t=50, b=0))
+            st.plotly_chart(sim_fig, use_container_width=True)
+
+    # --- ACTIONABLE AI ANALYSIS ---
+    if abs(escalation_delta) > 0.05:
+        st.markdown(f"""
+            <div style="background: {'rgba(255, 75, 75, 0.1)' if escalation_delta > 0 else 'rgba(0, 255, 65, 0.1)'}; 
+                        border: 1px solid {'#ff4b4b' if escalation_delta > 0 else '#00ff41'}; 
+                        padding: 15px; border-radius: 5px;">
+                <b style="color: {'#ff4b4b' if escalation_delta > 0 else '#00ff41'};">
+                    SYSTEM PROJECTION: {'CRITICAL ESCALATION' if escalation_delta > 0 else 'STABILIZATION TREND'}
+                </b><br>
+                Hypothetical shift of <b>{escalation_delta:+.2f}</b> detected. 
+                This scenario would trigger a <b>DEFCON {'1' if sim_gpti > 0.8 else '2' if sim_gpti > 0.6 else '3'}</b> alert.
+            </div>
+        """, unsafe_allow_html=True)
+
+    # --- 15. STRATEGIC RESOURCE FALLOUT ---
+    st.markdown("---")
+    st.subheader("💰 STRATEGIC RESOURCE FALLOUT (PREDICTIVE)")
+
+    # Active value switches between simulated and current
+    active_val = sim_gpti if 'sim_gpti' in locals() else gpti_val
+
+    # Market Correlation Math
+    oil_risk = active_val * 35 
+    gold_hedge = active_val * 18
+    currency_vol = "CRITICAL" if active_val > 0.8 else "UNSTABLE" if active_val > 0.6 else "STABLE"
+
+    r_col1, r_col2, r_col3 = st.columns(3)
+
+    with r_col1:
+        st.metric(label="🛢️ CRUDE OIL RISK", value=f"+{oil_risk:.1f}%", delta="Supply Threat", delta_color="inverse")
+        st.caption("Brent Crude futures surge.")
+
+    with r_col2:
+        st.metric(label="🟡 GOLD (SAFE HAVEN)", value=f"+{gold_hedge:.1f}%", delta="Capital Flight")
+        st.caption("Hedge inflow into bullion.")
+
+    with r_col3:
+        st.metric(label="💹 CURRENCY VOLATILITY", value=currency_vol, delta="Forex Risk", delta_color="off" if currency_vol == "STABLE" else "inverse")
+        st.caption("Regional currency fluctuation.")
+
+    # --- RISK ASSESSMENT BOX ---
+    status_color = "#ff4b4b" if active_val > 0.75 else "#ffaa00" if active_val > 0.5 else "#00ff41"
+    st.markdown(f"""
+        <div style="background: rgba(13, 17, 23, 0.8); border: 1px solid {status_color}33; 
+                    border-left: 5px solid {status_color}; padding: 15px; border-radius: 4px; margin-top: 15px;">
+            <strong style="color: {status_color}; text-transform: uppercase;"> 
+                ⚠️ Economic Risk Assessment: {'SEVERE' if active_val > 0.75 else 'MODERATE' if active_val > 0.5 else 'LOW'}
+            </strong><br>
+            <p style="color: #8b949e; font-size: 13px; margin-top: 5px;">
+                Based on the current <b>GPTI of {active_val:.2f}</b>, the model predicts a shift in global commodity flows. 
+                Recommend hedging assets and securing logistics pipelines.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # --- FINAL FOOTER ---
+    st.markdown("<br><center><small>GEOSENTINEL C2 | DEVELOPED BY MOHD ARSHAD | © 2026</small></center>", unsafe_allow_html=True)
+
+
+
+
 
 # ==========================================
 # 9. ECONOMIC IMPACTS (ADVANCED MODULE)
@@ -385,74 +625,8 @@ with st.expander("🔬 SYSTEM ARCHITECTURE & MATHEMATICAL MODEL"):
     st.write("Where $\omega$ represents dynamic weights assigned based on variance explanation.")
     st.info("System uses Gemini 1.5 Flash for NLU and DistilBERT for local Sentiment Analysis.")
 
-st.markdown("<br><center><small>GEOSENTINEL C2 | DEVELOPED BY MOHD ARSHAD | © 2026</small></center>", unsafe_allow_html=True)
 
 
-# ==========================================
-# 11. STRATEGIC SCENARIO SIMULATOR
-# ==========================================
-st.markdown("---")
-st.subheader("🔮 STRATEGIC SCENARIO SIMULATOR (WAR-GAMING)")
-st.markdown("""
-<div style="background: rgba(0, 255, 65, 0.05); padding: 10px; border-radius: 5px; border: 1px solid #00ff4133;">
-    <small style="color: #00ff41;">OPERATIONAL NOTE: Adjust sliders to simulate hypothetical escalation and observe the impact on the Global Geopolitical Tension Index (GPTI).</small>
-</div>
-""", unsafe_allow_html=True)
 
-with st.container():
-    col_sim_left, col_sim_right = st.columns([1, 1.5])
 
-    with col_sim_left:
-        st.markdown("<br>", unsafe_allow_html=True)
-        # Tactical Sliders
-        sim_kinetic = st.slider("Simulated Kinetic Activity (MCT):", 0.0, 1.0, float(latest['MCT_norm']), 
-                                help="Simulate increase in troop deployments, border skirmishes, or drone strikes.")
-        
-        sim_narrative = st.slider("Simulated Narrative Pressure (INT):", 0.0, 1.0, float(latest['INT_norm']), 
-                                  help="Simulate a massive surge in hostile state media reporting or cyber-propaganda.")
-        
-        sim_horizon = st.select_slider("Projection Horizon:", options=["Immediate", "48h Short-term", "7-Day Tactical"], value="48h Short-term")
 
-    # --- SIMULATION MATH (PCA-WEIGHTED) ---
-    # Using the current weights from your index_calculator.py
-    # $Projected\_GPTI = (\omega_1 \cdot MCT_{sim}) + (\omega_2 \cdot INT_{sim})$
-    sim_gpti = (sim_kinetic * 0.65) + (sim_narrative * 0.35) 
-    escalation_delta = sim_gpti - gpti_val
-
-    with col_sim_right:
-        # Gauge Visual for Simulation Impact
-        sim_fig = go.Figure(go.Indicator(
-            mode = "gauge+number+delta",
-            value = sim_gpti,
-            domain = {'x': [0, 1], 'y': [0, 1]},
-            title = {'text': "PROJECTED INTENSITY", 'font': {'size': 18, 'color': '#00ff41'}},
-            delta = {'reference': gpti_val, 'increasing': {'color': "#ff4b4b"}, 'decreasing': {'color': "#00ff41"}},
-            gauge = {
-                'axis': {'range': [0, 1], 'tickwidth': 1, 'tickcolor': "#00ff41"},
-                'bar': {'color': "#ff4b4b" if escalation_delta > 0 else "#00ff41"},
-                'bgcolor': "rgba(0,0,0,0)",
-                'borderwidth': 2,
-                'bordercolor': "#30363d",
-                'steps': [
-                    {'range': [0, 0.4], 'color': 'rgba(0, 255, 65, 0.1)'},
-                    {'range': [0.4, 0.7], 'color': 'rgba(255, 255, 0, 0.1)'},
-                    {'range': [0.7, 1], 'color': 'rgba(255, 75, 75, 0.1)'}
-                ],
-            }
-        ))
-        sim_fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', font={'color': "white", 'family': "Share Tech Mono"}, height=350, margin=dict(t=50, b=0))
-        st.plotly_chart(sim_fig, use_container_width=True)
-
-# --- ACTIONABLE AI ANALYSIS OF THE SIMULATION ---
-if abs(escalation_delta) > 0.05:
-    st.markdown(f"""
-        <div style="background: {'rgba(255, 75, 75, 0.1)' if escalation_delta > 0 else 'rgba(0, 255, 65, 0.1)'}; 
-                    border: 1px solid {'#ff4b4b' if escalation_delta > 0 else '#00ff41'}; 
-                    padding: 15px; border-radius: 5px;">
-            <b style="color: {'#ff4b4b' if escalation_delta > 0 else '#00ff41'};">
-                SYSTEM PROJECTION: {'CRITICAL ESCALATION' if escalation_delta > 0 else 'STABILIZATION TREND'}
-            </b><br>
-            Hypothetical shift of <b>{escalation_delta:+.2f}</b> detected. 
-            This scenario would trigger a <b>DEFCON {'1' if sim_gpti > 0.8 else '2' if sim_gpti > 0.6 else '3'}</b> alert.
-        </div>
-    """, unsafe_allow_html=True)
