@@ -1,0 +1,56 @@
+# --- ENVIRONMENT VARIABLES (MOST CRITICAL) ---
+.env
+*.env
+
+# --- PYTHON SETTINGS ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- VIRTUAL ENVIRONMENT ---
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# --- PROJECT SPECIFIC LOGS & DATA ---
+# Inhe ignore karna chahiye kyunki ye run-time par generate hoti hain
+live_intelligence_log.json
+geosentinal_benchmarks.csv
+*.log
+
+# --- STREAMLIT & DISK ---
+.streamlit/config.toml
+.streamlit/secrets.toml
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- IDE SETTINGS (Eclipse/VSCode) ---
+.project
+.pydevproject
+.settings/
+.vscode/
+.idea/
+*.swp
+*.swo
