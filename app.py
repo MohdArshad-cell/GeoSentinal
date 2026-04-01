@@ -35,66 +35,128 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. ELITE MILITARY-GRADE CSS (UI/UX)
+# 2. MISSION CONTROL 2.0 CSS (STREATH OPS)
 # ==========================================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap');
     
-    /* Global Styles */
-    .main { background-color: #05070a; color: #00ff41; font-family: 'Share Tech Mono', monospace; }
-    [data-testid="stSidebar"] { background-color: #0d1117; border-right: 1px solid #30363d; }
+    /* 1. Global Stealth Theme */
+    .stApp {
+        background-color: #0A0F14;
+        color: #F0F6FC;
+        font-family: 'Inter', sans-serif;
+    }
     
-    /* Header & Pulse */
+    /* Typography Overrides */
+    h1, h2, h3, .tactical-label { 
+        font-family: 'JetBrains Mono', monospace !important; 
+        letter-spacing: -0.5px;
+    }
+
+    /* 2. Professional Glassmorphism Header */
     .header-container {
-        background: linear-gradient(90deg, rgba(13,17,23,1) 0%, rgba(30,41,59,0.5) 100%);
-        padding: 20px; border-left: 5px solid #00ff41; border-radius: 5px; margin-bottom: 20px;
+        background: rgba(16, 22, 31, 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.4);
     }
+    
     .status-pulse {
-        height: 10px; width: 10px; background-color: #00ff41; border-radius: 50%;
-        display: inline-block; margin-right: 10px; box-shadow: 0 0 8px #00ff41;
-        animation: pulse-green 2s infinite;
+        height: 8px; width: 8px; border-radius: 50%;
+        background-color: #00D4FF;
+        display: inline-block; margin-right: 12px;
+        box-shadow: 0 0 12px #00D4FF;
+        animation: pulse-cyan 2.5s infinite;
     }
-    @keyframes pulse-green {
-        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.7); }
-        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 255, 65, 0); }
-        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 65, 0); }
+    @keyframes pulse-cyan {
+        0% { transform: scale(0.9); opacity: 0.5; }
+        50% { transform: scale(1.2); opacity: 1; }
+        100% { transform: scale(0.9); opacity: 0.5; }
     }
 
-    /* DEFCON Box */
+    /* 3. Modern DEFCON Architecture */
     .defcon-box {
-        padding: 15px; border-radius: 5px; text-align: center;
-        font-family: 'Share Tech Mono', monospace; font-weight: bold;
-        letter-spacing: 2px; transition: 0.5s;
+        background: rgba(13, 17, 23, 0.6);
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        border-top: 4px solid #00D4FF;
+        transition: all 0.3s ease;
+    }
+    .defcon-box:hover { transform: translateY(-3px); background: rgba(0, 212, 255, 0.05); }
+
+    /* 4. Sleek Signal Cards (No Clutter) */
+    .tactical-card {
+        background: #111821;
+        border: 1px solid #1C2631;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: border 0.3s ease;
+    }
+    .tactical-card:hover {
+        border-color: #00D4FF;
+    }
+    .sitrep-box {
+        background: rgba(0, 212, 255, 0.05);
+        border-left: 3px solid #00D4FF;
+        padding: 12px;
+        font-size: 14px;
+        color: #C9D1D9;
+        margin: 15px 0;
     }
 
-    /* Ticker Logic */
+    /* 5. Clean Ticker (Stealth Style) */
     .ticker-wrapper {
-        background: rgba(10, 10, 15, 0.95); border-bottom: 1px solid #30363d;
-        padding: 10px 0; display: flex; align-items: center; overflow: hidden;
+        background: #0D1117;
+        border-bottom: 1px solid #1C2631;
+        padding: 8px 0;
     }
-    .ticker-content {
-        display: inline-block; white-space: nowrap;
-        animation: ticker-move 60s linear infinite;
-    }
-    @keyframes ticker-move { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     .live-badge {
-        background: #ff4b4b; color: white; padding: 2px 8px; font-size: 12px;
-        font-weight: bold; border-radius: 3px; margin: 0 15px; animation: blink 1.5s infinite;
+        background: #FF0055;
+        color: white;
+        padding: 1px 10px;
+        font-size: 10px;
+        font-weight: bold;
+        border-radius: 100px;
+        text-transform: uppercase;
     }
-    @keyframes blink { 0%, 100% {opacity: 1;} 50% {opacity: 0.3;} }
 
-    /* Cards */
-    .intel-card {
-        background: rgba(22, 27, 34, 0.8); border: 1px solid #30363d;
-        border-left: 4px solid #00ff41; padding: 15px; margin-bottom: 15px; border-radius: 4px;
+    /* 6. Tabs & Indicators */
+    .stTabs [data-baseweb="tab-list"] { gap: 15px; }
+    .stTabs [data-baseweb="tab"] {
+        background: transparent;
+        border: none;
+        color: #8B949E;
+        font-family: 'JetBrains Mono', monospace;
     }
-    .propaganda-flag {
-        font-size: 10px; padding: 2px 6px; border-radius: 3px; float: right; font-weight: bold;
+    .stTabs [aria-selected="true"] {
+        color: #00D4FF !important;
+        border-bottom: 2px solid #00D4FF !important;
     }
+
+    /* Indicator Glows */
+    .indicator-box {
+        background: #111821;
+        border: 1px solid #1C2631;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+    }
+    .indicator-active {
+        border-color: #00D4FF;
+        background: rgba(0, 212, 255, 0.05);
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
+    }
+    
+    /* Metrics Fix */
+    [data-testid="stMetricValue"] { color: #F0F6FC !important; font-family: 'JetBrains Mono' !important; }
 </style>
 """, unsafe_allow_html=True)
-
 # ==========================================
 # 3. ELITE SIDEBAR RECONSTRUCTION
 # ==========================================
@@ -292,11 +354,15 @@ m_col4.metric("AI AGENT", "CONNECTED", "Gemini 2.5F")
 st.markdown("<hr style='margin:10px 0; border:0.5px solid #30363d;'>", unsafe_allow_html=True)
 
 st.markdown("---")
-tab1, tab2, tab3, tab4 = st.tabs([
-    "🛰️ SITUATIONAL MAP",   # Purana Tab 1
-    "⚡ LIVE SIGNALS",      # NAYA TAB (Raw Feed)
-    "📊 TREND ANALYTICS",   # Purana Tab 2
-    "🔮 COMMANDER'S SIM"    # Purana Tab 3
+# ==========================================
+# 6. TAB DEFINITION (THE 5-LAYER STACK)
+# ==========================================
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "🛰️ SITUATIONAL MAP",     # Reality
+    "⚡ LIVE SIGNALS",        # SIGINT
+    "📊 TREND ANALYTICS",     # Math/Trend
+    "🔮 COMMANDER'S SIM",     # Wargaming
+    "📁 STRATEGIC INTEL"      # NEW: Deep Dive Analysis
 ])
 
 # ==========================================
@@ -384,6 +450,11 @@ with tab1:
 # TAB 2: LIVE SIGNALS (The Intelligence Terminal)
 # ==========================================
 with tab2:
+    # Simulation of intercept (Only for UI feel)
+    with st.spinner("🕵️ INTERCEPTING ENCRYPTED OSINT PACKETS..."):
+        time.sleep(0.5) # Chota sa delay for realism
+
+    st.toast("Satellite Link Established: Node-01 Active", icon="📡")
     # 1. TACTICAL STATUS HEADER
     st.markdown("""
         <div style="background: rgba(0, 255, 65, 0.05); padding: 15px; border-left: 5px solid #00ff41; border-radius: 5px; margin-bottom: 25px;">
@@ -736,7 +807,159 @@ with tab4:
         </div>
     """, unsafe_allow_html=True)
 
-   # ==========================================
+
+# ==========================================
+# TAB 5: STRATEGIC INTEL (Pro-Level Deep Dive)
+# ==========================================
+with tab5:
+    st.markdown("""
+        <div style="background: rgba(76, 201, 240, 0.05); padding: 15px; border-left: 5px solid #4CC9F0; border-radius: 5px; margin-bottom: 25px;">
+            <h3 style="margin:0; color:#4CC9F0; font-family: 'Share Tech Mono'; letter-spacing: 2px;">📁 MULTI-DOMAIN STRATEGIC DOSSIER</h3>
+            <p style="margin:0; color: #8b949e; font-size: 11px;">ANALYSIS NODE: SENTINEL-ADVANCED | ENGINE: DETERMINISTIC THREAT MODELING</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # 1. THREAT RADAR & PANIC GAUGE
+    col_radar, col_panic = st.columns([1.8, 1.2])
+    
+    with col_radar:
+        st.markdown('<p class="tactical-label">5-Axis Domain Threat Matrix</p>', unsafe_allow_html=True)
+        # Radar Chart Logic
+        threat_data = adv.generate_threat_matrix(gpti_val, selected_zone)
+        categories = list(threat_data.keys())
+        values = list(threat_data.values())
+        
+        fig_radar = go.Figure()
+        fig_radar.add_trace(go.Scatterpolar(
+            r=values + [values[0]],
+            theta=categories + [categories[0]],
+            fill='toself',
+            fillcolor='rgba(76, 201, 240, 0.25)',
+            line=dict(color='#4CC9F0', width=3),
+            marker=dict(size=8, color='#00ff41')
+        ))
+        fig_radar.update_layout(
+            polar=dict(
+                radialaxis=dict(
+                    visible=True, 
+                    range=[0, 100], 
+                    gridcolor="#30363d", 
+                    tickfont=dict(size=8, color="#8b949e")
+                ),
+                angularaxis=dict(
+                    gridcolor="#30363d", 
+                    tickfont=dict(size=10, color="#f0f6fc")  # FIXED: Changed 'font' to 'tickfont'
+                ),
+                bgcolor='rgba(0,0,0,0)'
+            ),
+            showlegend=False, 
+            paper_bgcolor='rgba(0,0,0,0)', 
+            height=380, 
+            margin=dict(t=40, b=40, l=50, r=50)
+        )
+        st.plotly_chart(fig_radar, use_container_width=True, config={'displayModeBar': False})
+
+    with col_panic:
+        st.markdown('<p class="tactical-label">Social Anxiety & Panic Index</p>', unsafe_allow_html=True)
+        panic_val, trending_terms = adv.get_public_panic_index(gpti_val)
+        
+        # PRO-LEVEL GAUGE
+        fig_panic = go.Figure(go.Indicator(
+            mode = "gauge+number",
+            value = panic_val,
+            number = {'suffix': "%", 'font': {'color': '#f0f6fc', 'family': 'Share Tech Mono'}},
+            gauge = {
+                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#4b5563"},
+                'bar': {'color': "#ff4b4b" if panic_val > 65 else "#00ff41"},
+                'bgcolor': "rgba(255,255,255,0.05)",
+                'steps': [
+                    {'range': [0, 50], 'color': 'rgba(0, 255, 65, 0.1)'},
+                    {'range': [50, 80], 'color': 'rgba(255, 170, 0, 0.1)'},
+                    {'range': [80, 100], 'color': 'rgba(255, 75, 75, 0.1)'}
+                ],
+                'threshold': {
+                    'line': {'color': "white", 'width': 4},
+                    'thickness': 0.75,
+                    'value': 90
+                }
+            }
+        ))
+        fig_panic.update_layout(paper_bgcolor='rgba(0,0,0,0)', height=280, margin=dict(t=20, b=0))
+        st.plotly_chart(fig_panic, use_container_width=True)
+        
+        st.markdown(f"""
+            <div style="background:rgba(13,17,23,0.8); border:1px solid #30363d; padding:10px; border-radius:5px;">
+                <small style="color:#8b949e; text-transform:uppercase;">Trending Civilian Concerns:</small><br>
+                <span style="color:#ffaa00; font-family:'Share Tech Mono'; font-size:14px;">
+                    {" | ".join([t.upper() for t in trending_terms])}
+                </span>
+                <p style="font-size:9px; color:#4b5563; margin-top:10px;">
+                    *Social Panic is calculated using a <b>Non-Linear Sigmoid Model</b> centered at GPTI 0.60.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # 2. INFORMATION INTEGRITY (PSYOP MONITOR)
+    st.markdown('<p class="tactical-label">Information Integrity & PsyOp Analysis</p>', unsafe_allow_html=True)
+    if display_logs:
+        latest_text = display_logs[0]['headline'] + " " + display_logs[0].get('sitrep', '')
+        integrity = adv.analyze_information_integrity(latest_text, display_logs[0].get('sitrep', ''))
+        
+        i_col1, i_col2 = st.columns([1, 2.5])
+        with i_col1:
+            st.metric("INTEGRITY SCORE", f"{integrity['integrity_score']}%", 
+                      delta="SECURE" if integrity['integrity_score'] > 75 else "COMPROMISED", 
+                      delta_color="normal" if integrity['integrity_score'] > 75 else "inverse")
+        with i_col2:
+            status_clr = "#00ff41" if integrity['integrity_score'] > 75 else "#ffaa00" if integrity['integrity_score'] > 50 else "#ff4b4b"
+            st.markdown(f"""
+                <div style="padding:10px; border:1px solid {status_clr}33; background:{status_clr}11; border-radius:5px;">
+                    <small style="color:#8b949e;">NARRATIVE STATUS:</small>
+                    <b style="color:{status_clr}; display:block;">{integrity['narrative_status'].upper()}</b>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            if integrity['flags']:
+                st.markdown("<div style='margin-top:10px;'>" + 
+                            "".join([f'<span style="background:rgba(255,75,75,0.1); color:#ff4b4b; padding:2px 8px; border-radius:5px; margin-right:5px; font-size:10px; border:1px solid #ff4b4b44;">⚠️ {f.upper()}</span>' for f in integrity['flags']]) + 
+                            "</div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # 3. LEADING INDICATORS (The Glowing Checklist)
+    st.markdown('<p class="tactical-label">Tactical Leading Indicators for Kinetic Escalation</p>', unsafe_allow_html=True)
+    
+    # Getting results from the updated AdvancedFeatures engine
+    indicator_results = adv.analyze_leading_indicators(latest_text, selected_zone)
+    
+    ind_cols = st.columns(4)
+    for i, (name, active) in enumerate(indicator_results.items()):
+        with ind_cols[i]:
+            if active:
+                color = "#ff4b4b" if "Mobilization" in name else "#00ff41"
+                glow = f"box-shadow: 0 0 15px {color}44; border: 1px solid {color}; background: {color}11;"
+                icon = "⚡"
+                status_text = "[ACTIVE]"
+            else:
+                color = "#30363d"
+                glow = "border: 1px solid #21262d; background: rgba(255,255,255,0.02);"
+                icon = "🔘"
+                status_text = "[SCANNING]"
+
+            st.markdown(f"""
+                <div style="text-align:center; padding:15px; border-radius:8px; {glow}">
+                    <div style="font-size:24px; margin-bottom:5px;">{icon}</div>
+                    <div style="font-size:10px; color:{color if active else '#8b949e'}; font-family:'Share Tech Mono'; font-weight:bold;">{name.upper()}</div>
+                    <div style="font-size:8px; color:{color if active else '#4b5563'}; margin-top:5px;">{status_text}</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+
+
+
+# ==========================================
 # 10. SYSTEM METHODOLOGY (THE JURY BAIT) - OUTSIDE TABS
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True) # Separation space
@@ -775,7 +998,3 @@ st.markdown(f"""
         </p>
     </div>
 """, unsafe_allow_html=True)
-
-
-
-
