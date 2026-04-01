@@ -12,6 +12,8 @@ import time
 import data_ingestion
 import index_calculator
 import advanced_modules
+
+
 # ==========================================
 # 0. GLOBAL INITIALIZATION (Top of the Script)
 # ==========================================
@@ -192,8 +194,11 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 4. DATA PIPELINE (SEQUENTIAL EXECUTION)
+# 4. DATA PIPELINE (GLOBAL EXECUTION)
 # ==========================================
+display_logs = []  # Initialize globally to prevent NameError
+defcon = {}        # Initialize globally
+
 try:
     # A. Fetch Raw Data
     df_raw = data_ingestion.get_validation_data(selected_zone)
@@ -207,70 +212,84 @@ try:
     gpti_val = latest['GPTI']
     trend = latest.get('GPTI_Trend', 0.0)
     
-    # D. Economic/Cyber Impacts
+    # D. Load SIGINT Logs (Single Point of Entry)
+    if os.path.exists("live_intelligence_log.json"):
+        with open("live_intelligence_log.json", 'r') as f:
+            try:
+                raw_data = json.load(f)
+                # Theater Name Sanitizer (Removes 2019, 2022, etc.)
+                for item in raw_data:
+                    item['zone_clean'] = item['zone'].split(' ')[0].split('-')[0].upper()
+                display_logs = raw_data[:30] 
+            except: display_logs = []
+
+    # E. Economic/Cyber Impacts
     adv = advanced_modules.AdvancedFeatures()
     impacts = adv.get_economic_impact(gpti_val, selected_zone)
 
 except Exception as e:
-    st.error(f"FATAL ERROR IN PIPELINE: {e}")
+    st.error(f"🚨 PIPELINE CRITICAL FAILURE: {e}")
     st.stop()
 
 # ==========================================
-# 5. LIVE INTEL TICKER
+# 5. LIVE INTEL TICKER (NSA STYLE)
 # ==========================================
-if os.path.exists("live_intelligence_log.json"):
-    with open("live_intelligence_log.json", 'r') as f:
-        try:
-            ticker_data = json.load(f)
-            if ticker_data:
-                items_html = ""
-                # Infinite loop simulation
-                display_items = (ticker_data[:10]) * 3
-                for i in display_items:
-                    r_score = i.get('risk_score', 0)
-                    color = "#ff4b4b" if r_score > 0.7 else "#00ff41"
-                    items_html += f"""
-                    <span style='margin: 0 40px; color: {color}; font-size: 14px;'>
-                        <b>[{i['zone'].upper()}]</b>: {i['sitrep']}
-                    </span>"""
-                st.markdown(f"""
-                    <div class="ticker-wrapper">
-                        <div class="live-badge">📡 LIVE FEED</div>
-                        <div class="ticker-content">{items_html}</div>
-                    </div>
-                """, unsafe_allow_html=True)
-        except: pass
+if display_logs:
+    ticker_items = ""
+    # Creating a seamless loop for the marquee
+    for i in (display_logs[:10] * 2):
+        r_score = i.get('risk_score', 0)
+        color = "#ff4b4b" if r_score > 0.75 else "#00ff41"
+        ticker_items += f"""
+            <span style='margin: 0 50px; color: {color}; font-family: "Share Tech Mono"; font-size: 13px;'>
+                <b>[{i['zone_clean']}]</b>: {i['sitrep']} ⚡ RISK: {r_score:.2f}
+            </span>"""
+    
+    st.markdown(f"""
+        <div class="ticker-wrapper" style="background: rgba(0,0,0,0.5); border-bottom: 1px solid #30363d; padding: 5px 0;">
+            <div class="live-badge" style="background:#ff4b4b; color:white; padding:2px 8px; font-size:10px; font-weight:bold; margin-right:10px;">BREAKING</div>
+            <marquee scrollamount="6" style="color: #00ff41;">{ticker_items}</marquee>
+        </div>
+    """, unsafe_allow_html=True)
 
 # ==========================================
 # 6. HEADER & DEFCON DISPLAY
 # ==========================================
-st.markdown(f"""
-    <div class="header-container">
-        <h1 style='margin:0; font-size: 2.5rem;'>🛡️ GEOSENTINEL <span style='color:#00ff41; font-weight:100;'>COMMAND</span></h1>
-        <p style='margin:0; color:#8b949e;'><span class="status-pulse"></span> STATUS: OPERATIONAL | THEATER: {selected_zone.upper()} | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC</p>
-    </div>
-""", unsafe_allow_html=True)
-
-# DEFCON Logic
-if gpti_val > 0.85:
+# Advanced DEFCON Logic
+if gpti_val > 0.80:
     defcon = {"lv": "1", "ds": "COCKED PISTOL", "clr": "#ff4b4b", "bg": "rgba(255, 75, 75, 0.2)"}
-elif gpti_val > 0.65:
+elif gpti_val > 0.60:
     defcon = {"lv": "2", "ds": "FAST PACE", "clr": "#ffaa00", "bg": "rgba(255, 170, 0, 0.2)"}
-elif gpti_val > 0.45:
+elif gpti_val > 0.40:
     defcon = {"lv": "3", "ds": "ROUND HOUSE", "clr": "#ffff00", "bg": "rgba(255, 255, 0, 0.1)"}
 else:
     defcon = {"lv": "5", "ds": "FADE OUT", "clr": "#00ff41", "bg": "rgba(0, 255, 65, 0.1)"}
 
-m_col1, m_col2, m_col3, m_col4 = st.columns([1, 1.5, 1, 1])
-m_col1.metric("CONFLICT INDEX (GPTI)", f"{gpti_val:.2f}", f"{trend:+.2f}")
+st.markdown(f"""
+    <div class="header-container" style="padding: 10px 0;">
+        <h1 style='margin:0; font-family: "Share Tech Mono";'>🛡️ GEOSENTINEL <span style='color:#00ff41;'>COMMAND</span></h1>
+        <div style='display:flex; justify-content:space-between; color:#8b949e; font-size:12px;'>
+            <span><span class="status-pulse"></span> SYSTEM: OPERATIONAL</span>
+            <span>📍 THEATER: {selected_zone.upper()}</span>
+            <span>🕒 {datetime.now().strftime('%H:%M:%S')} UTC</span>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
+m_col1, m_col2, m_col3, m_col4 = st.columns([1.2, 1.5, 1, 1])
+m_col1.metric("CONFLICT INDEX", f"{gpti_val:.2f}", f"{trend:+.2f}")
 with m_col2:
     st.markdown(f"""
-        <div class="defcon-box" style="border: 2px solid {defcon['clr']}; background: {defcon['bg']}; color: {defcon['clr']};">
-            <small>THREAT LEVEL</small><br><span style="font-size: 24px;">DEFCON {defcon['lv']}</span><br><small>{defcon['ds']}</small>
+        <div style="border: 1px solid {defcon['clr']}; background: {defcon['bg']}; color: {defcon['clr']}; padding: 10px; border-radius: 5px; text-align: center;">
+            <small style="text-transform: uppercase; letter-spacing: 1px;">THREAT POSTURE</small><br>
+            <b style="font-size: 20px;">DEFCON {defcon['lv']}</b><br>
+            <small>{defcon['ds']}</small>
         </div>
     """, unsafe_allow_html=True)
-m_col3.metric("OSINT CONFIDENCE", "94.2%", "Optimized")
-m_col4.metric("SYSTEM UPTIME", "100%", "Secure")
+m_col3.metric("INTELLIGENCE NODES", "ACTIVE", "Distributed")
+m_col4.metric("AI AGENT", "CONNECTED", "Gemini 2.5F")
+
+st.markdown("<hr style='margin:10px 0; border:0.5px solid #30363d;'>", unsafe_allow_html=True)
 
 st.markdown("---")
 tab1, tab2, tab3, tab4 = st.tabs([
@@ -357,6 +376,9 @@ with tab1:
                     st.warning("⚠️ Intel Packet Corrupted.")
         else:
             st.warning("⚠️ Intelligence Log Missing.")
+
+
+    
 
 # ==========================================
 # TAB 2: LIVE SIGNALS (The Intelligence Terminal)
