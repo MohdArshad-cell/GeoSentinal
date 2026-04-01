@@ -294,66 +294,83 @@ except Exception as e:
     st.stop()
 
 # ==========================================
-# 5. LIVE INTEL TICKER (NSA STYLE)
+# 5. LIVE INTEL TICKER (STEALTH OPS STYLE)
 # ==========================================
 if display_logs:
     ticker_items = ""
-    # Creating a seamless loop for the marquee
-    for i in (display_logs[:10] * 2):
+    # Creating a seamless loop for the marquee with the new color palette
+    for i in (display_logs[:12] * 2):
         r_score = i.get('risk_score', 0)
-        color = "#ff4b4b" if r_score > 0.75 else "#00ff41"
+        # Use Cyber Cyan (#00D4FF) for low risk, War Red (#FF0055) for high risk
+        color = "#FF0055" if r_score > 0.75 else "#00D4FF"
         ticker_items += f"""
-            <span style='margin: 0 50px; color: {color}; font-family: "Share Tech Mono"; font-size: 13px;'>
-                <b>[{i['zone_clean']}]</b>: {i['sitrep']} ⚡ RISK: {r_score:.2f}
+            <span style='margin: 0 60px; color: {color}; font-family: "JetBrains Mono"; font-size: 13px; font-weight: bold;'>
+                <b>[{i['zone_clean']}]</b>: {i['sitrep']} <span style="opacity: 0.5;">⚡ LVL {r_score:.2f}</span>
             </span>"""
     
     st.markdown(f"""
-        <div class="ticker-wrapper" style="background: rgba(0,0,0,0.5); border-bottom: 1px solid #30363d; padding: 5px 0;">
-            <div class="live-badge" style="background:#ff4b4b; color:white; padding:2px 8px; font-size:10px; font-weight:bold; margin-right:10px;">BREAKING</div>
-            <marquee scrollamount="6" style="color: #00ff41;">{ticker_items}</marquee>
+        <div class="ticker-wrapper" style="background: #080C11; border-bottom: 1px solid #1C2631;">
+            <div style="display:flex; align-items:center;">
+                <div class="live-badge" style="margin-left: 20px;">SIGNAL INTERCEPT</div>
+                <marquee scrollamount="7" style="color: #00D4FF; padding: 5px 0;">{ticker_items}</marquee>
+            </div>
         </div>
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 6. HEADER & DEFCON DISPLAY
+# 6. HEADER & DEFCON COMMAND CENTER
 # ==========================================
-# Advanced DEFCON Logic
+# Elite DEFCON Logic with Stealth Palette
 if gpti_val > 0.80:
-    defcon = {"lv": "1", "ds": "COCKED PISTOL", "clr": "#ff4b4b", "bg": "rgba(255, 75, 75, 0.2)"}
+    defcon = {"lv": "1", "ds": "COCKED PISTOL", "clr": "#FF0055", "bg": "rgba(255, 0, 85, 0.15)"}
 elif gpti_val > 0.60:
-    defcon = {"lv": "2", "ds": "FAST PACE", "clr": "#ffaa00", "bg": "rgba(255, 170, 0, 0.2)"}
+    defcon = {"lv": "2", "ds": "FAST PACE", "clr": "#FF7A00", "bg": "rgba(255, 122, 0, 0.1)"}
 elif gpti_val > 0.40:
-    defcon = {"lv": "3", "ds": "ROUND HOUSE", "clr": "#ffff00", "bg": "rgba(255, 255, 0, 0.1)"}
+    defcon = {"lv": "3", "ds": "ROUND HOUSE", "clr": "#FFD600", "bg": "rgba(255, 214, 0, 0.05)"}
 else:
-    defcon = {"lv": "5", "ds": "FADE OUT", "clr": "#00ff41", "bg": "rgba(0, 255, 65, 0.1)"}
+    defcon = {"lv": "5", "ds": "FADE OUT", "clr": "#00D4FF", "bg": "rgba(0, 212, 255, 0.05)"}
 
 st.markdown(f"""
-    <div class="header-container" style="padding: 10px 0;">
-        <h1 style='margin:0; font-family: "Share Tech Mono";'>🛡️ GEOSENTINEL <span style='color:#00ff41;'>COMMAND</span></h1>
-        <div style='display:flex; justify-content:space-between; color:#8b949e; font-size:12px;'>
-            <span><span class="status-pulse"></span> SYSTEM: OPERATIONAL</span>
-            <span>📍 THEATER: {selected_zone.upper()}</span>
-            <span>🕒 {datetime.now().strftime('%H:%M:%S')} UTC</span>
+    <div class="header-container">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h1 style='margin:0; font-size: 2.2rem; letter-spacing: -1px;'>GEOSENTINEL <span style='color:#00D4FF;'>C2 COMMAND</span></h1>
+                <p style='margin:0; color:#8B949E; font-size: 11px; font-family: "JetBrains Mono";'>
+                    <span class="status-pulse"></span> 
+                    SATELLITE LINK: ESTABLISHED | PROTOCOL: OSINT-V3 | {datetime.now().strftime('%d %b %Y %H:%M:%S')} UTC
+                </p>
+            </div>
+            <div style="text-align:right;">
+                <small style="color:#4B5563; text-transform:uppercase; letter-spacing:1px;">Theater Status</small>
+                <div style="color:#00D4FF; font-weight:bold; font-size:16px;">{selected_zone.upper()}</div>
+            </div>
         </div>
     </div>
 """, unsafe_allow_html=True)
 
-m_col1, m_col2, m_col3, m_col4 = st.columns([1.2, 1.5, 1, 1])
-m_col1.metric("CONFLICT INDEX", f"{gpti_val:.2f}", f"{trend:+.2f}")
+# Metrics Grid with "Stealth" Styling
+m_col1, m_col2, m_col3, m_col4 = st.columns([1.2, 1.4, 1, 1])
+
+with m_col1:
+    st.metric("CONFLICT INDEX", f"{gpti_val:.2f}", f"{trend:+.2f} VOL", delta_color="inverse")
+
 with m_col2:
     st.markdown(f"""
-        <div style="border: 1px solid {defcon['clr']}; background: {defcon['bg']}; color: {defcon['clr']}; padding: 10px; border-radius: 5px; text-align: center;">
-            <small style="text-transform: uppercase; letter-spacing: 1px;">THREAT POSTURE</small><br>
-            <b style="font-size: 20px;">DEFCON {defcon['lv']}</b><br>
-            <small>{defcon['ds']}</small>
+        <div class="defcon-box" style="border-top-color: {defcon['clr']}; background: {defcon['bg']}; color: {defcon['clr']};">
+            <small style="opacity: 0.6; font-size: 10px; letter-spacing: 2px;">STRATEGIC POSTURE</small><br>
+            <span style="font-size: 1.5rem; font-weight: 800;">DEFCON {defcon['lv']}</span><br>
+            <small style="font-weight: bold; font-size: 11px;">{defcon['ds']}</small>
         </div>
     """, unsafe_allow_html=True)
-m_col3.metric("INTELLIGENCE NODES", "ACTIVE", "Distributed")
-m_col4.metric("AI AGENT", "CONNECTED", "Gemini 2.5F")
 
-st.markdown("<hr style='margin:10px 0; border:0.5px solid #30363d;'>", unsafe_allow_html=True)
+with m_col3:
+    st.metric("INTEL NODES", "34 ACTIVE", "99.8% SIGINT")
 
-st.markdown("---")
+with m_col4:
+    # Arshad, hum Gemini 3 Flash use kar rahe hain, wahi update kiya hai niche
+    st.metric("CORE BRAIN", "GEMINI 3F", "QUANTUM-OSINT")
+
+st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 # ==========================================
 # 6. TAB DEFINITION (THE 5-LAYER STACK)
 # ==========================================
