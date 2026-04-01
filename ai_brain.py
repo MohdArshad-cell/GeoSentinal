@@ -1,5 +1,6 @@
 import os
 import json
+import time  # NEW: Added for retry delay
 import google.generativeai as genai
 from datetime import datetime
 from dotenv import load_dotenv
@@ -11,8 +12,8 @@ load_dotenv()
 # ==========================================
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# Using 1.5 Flash for speed (Bouncer logic)
-model = genai.GenerativeModel('gemini-1.5-flash', 
+# Using 2.5 flash-lite for speed
+model = genai.GenerativeModel('gemini-2.5-flash-lite', 
                               generation_config={"response_mime_type": "application/json"})
 
 class StrategicBrain:
@@ -21,8 +22,7 @@ class StrategicBrain:
 
     def analyze_intelligence(self, headline, source, current_zone):
         """
-        LLM 'Bouncer' + Strategic Analyst: 
-        Filters noise and generates actionable sitreps.
+        ELITE UPDATE: Added Retry logic for 429 Quota errors.
         """
         prompt = f"""
         ROLE: Senior Strategic Defense Analyst (GeoSentinel System).
@@ -47,23 +47,33 @@ class StrategicBrain:
         }}
         """
         
-        try:
-            response = model.generate_content(prompt)
-            analysis = json.loads(response.text)
-            
-            # Metadata add karo logging ke liye
-            analysis['headline'] = headline
-            analysis['timestamp'] = datetime.now().isoformat()
-            analysis['zone'] = current_zone
-            
-            # Agar relevant hai toh log karo taaki UI pe dikhe
-            if analysis['is_relevant']:
-                self._log_intelligence(analysis)
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = model.generate_content(prompt)
+                analysis = json.loads(response.text)
                 
-            return analysis
-        except Exception as e:
-            print(f"❌ Brain Failure: {e}")
-            return self._get_fallback_response(headline)
+                analysis['headline'] = headline
+                analysis['timestamp'] = datetime.now().isoformat()
+                analysis['zone'] = current_zone
+                
+                if analysis['is_relevant']:
+                    self._log_intelligence(analysis)
+                    
+                return analysis
+
+            except Exception as e:
+                if "429" in str(e):
+                    # ELITE: Exponential Backoff - Quota exceeded toh wait karo
+                    wait_time = (attempt + 1) * 15 
+                    print(f"⚠️ Quota Full (429). Waiting {wait_time}s before retry {attempt+1}/{max_retries}...")
+                    time.sleep(wait_time)
+                    continue # Try again
+                else:
+                    print(f"❌ Brain Failure: {e}")
+                    return self._get_fallback_response(headline)
+
+        return self._get_fallback_response(headline)
 
     def _log_intelligence(self, data):
         """Logs relevant data for the Streamlit Live Feed."""
@@ -73,24 +83,24 @@ class StrategicBrain:
                 try: logs = json.load(f)
                 except: logs = []
         
-        # Newest intelligence first
         logs.insert(0, data)
-        # Keep only last 50 entries
         with open(self.log_file, 'w') as f:
             json.dump(logs[:50], f, indent=4)
 
     def _get_fallback_response(self, headline):
-        """Emergency logic if API fails or quota hits."""
         return {
             "is_relevant": True,
             "risk_score": 0.5,
             "sitrep": f"AUTO-ANALYSIS: Potential escalation detected in '{headline[:30]}...'",
             "integrity_score": 50,
-            "flags": ["API_OFFLINE"],
-            "strategic_options": ["Maintain Defensive Posture", "Verify via Secondary Source"]
+            "flags": ["API_OFFLINE_OR_QUOTA_FULL"],
+            "strategic_options": ["Verify via Secondary Source", "Monitor Local Feeds"]
         }
 
-# UI / Sentinel Compatibility Wrapper
-def analyze_with_gemini(headline, source, current_zone="Global"):
+# Sentinel System compatibility
+def analyze_intelligence(headline, source, current_zone="Global"):
     brain = StrategicBrain()
     return brain.analyze_intelligence(headline, source, current_zone)
+
+def analyze_with_gemini(headline, source, current_zone="Global"):
+    return analyze_intelligence(headline, source, current_zone)

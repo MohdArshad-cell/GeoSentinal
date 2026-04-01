@@ -7,7 +7,6 @@ from news_fetcher import NewsIntel
 from ai_brain import analyze_intelligence
 
 # --- ELITE CONFIGURATION ---
-# Ab ye system saare theaters ko monitor karega
 CONFLICT_THEATERS = {
     "India-Pakistan 2019": "India Pakistan military border tension LoC",
     "Russia-Ukraine 2022": "Russia Ukraine war offensive missile strike",
@@ -17,8 +16,8 @@ CONFLICT_THEATERS = {
 }
 
 LOG_FILE = "live_intelligence_log.json"
-UPDATE_INTERVAL_SECONDS = 300  # 5 Minutes (Elite systems don't spam, they observe)
-MAX_LOG_ENTRIES = 100 # Memory management
+UPDATE_INTERVAL_SECONDS = 300 
+MAX_LOG_ENTRIES = 100 
 
 def run_sentinel_cycle():
     """Run a synchronized intelligence sweep across all global theaters."""
@@ -30,17 +29,16 @@ def run_sentinel_cycle():
     # 1. MULTI-THEATER ACQUISITION
     for zone, query in CONFLICT_THEATERS.items():
         print(f"🔍 Scanning Theater: {zone}...")
-        raw_news = intel_agent.fetch_news(query, limit=3)
+        raw_news = intel_agent.fetch_news(query, limit=2) # Reduced limit to stay safe
         
         if raw_news.empty:
             continue
 
-        # 2. STRATEGIC ANALYSIS (Sync with Gemini)
+        # 2. STRATEGIC ANALYSIS
         for _, row in raw_news.iterrows():
             headline = row['title']
-            
-            # [FIX] Typos hata diye, ab ye Gemini ka use confirm karega
             print(f"🧠 Gemini analyzing signal from {row['source']}...")
+            
             analysis = analyze_intelligence(headline, row['source'], zone)
             
             if analysis and analysis.get('is_relevant'):
@@ -56,36 +54,40 @@ def run_sentinel_cycle():
                     "options": analysis.get('strategic_options', [])
                 }
                 all_processed_intel.append(intel_packet)
-            time.sleep(2) # API Rate-limiting safety
+            
+            # --- CRITICAL FIX: PACING ---
+            # 7-8 seconds gap ensures we stay under 10 RPM (Requests Per Minute)
+            print(f"⏳ Pacing system... (7s)")
+            time.sleep(7) 
 
-    # 3. SMART LOGGING (With Duplicate Prevention)
+    # 3. SMART LOGGING
     if all_processed_intel:
         update_database(all_processed_intel)
     else:
-        print("⚠️ No critical signals detected in this cycle.")
+        print("⚠️ No new critical signals detected in this cycle.")
 
 def update_database(new_packets):
     """Atomic update with duplicate prevention and size capping."""
     try:
         if os.path.exists(LOG_FILE):
             with open(LOG_FILE, 'r') as f:
-                history = json.load(f)
+                try:
+                    history = json.load(f)
+                except:
+                    history = []
         else:
             history = []
 
-        # [ELITE] Duplicate Prevention based on Headline
         existing_headlines = {item['headline'] for item in history}
         unique_new_packets = [p for p in new_packets if p['headline'] not in existing_headlines]
 
         if unique_new_packets:
-            # Newest at the top
             updated_history = unique_new_packets + history
-            # Memory Management: Keep only latest entries
             updated_history = updated_history[:MAX_LOG_ENTRIES]
 
             with open(LOG_FILE, 'w') as f:
                 json.dump(updated_history, f, indent=4)
-            print(f"✅ Database Updated: {len(unique_new_packets)} new signals logged.")
+            print(f"✅ Database Updated: {len(unique_new_packets)} new unique signals logged.")
         else:
             print("ℹ️ Sweep complete: No new unique signals found.")
 
