@@ -7,7 +7,7 @@ from datetime import datetime
 import json
 import os
 import time
-
+import streamlit.components.v1 as components
 # --- INTERNAL MODULE IMPORTS ---
 import data_ingestion
 import index_calculator
@@ -157,101 +157,125 @@ st.markdown("""
     [data-testid="stMetricValue"] { color: #F0F6FC !important; font-family: 'JetBrains Mono' !important; }
 </style>
 """, unsafe_allow_html=True)
+
 # ==========================================
-# 3. ELITE SIDEBAR RECONSTRUCTION
+# 2.5 GLOBAL INITIALIZATION (CRITICAL FIX)
+# ==========================================
+# Sidebar chalne se pehle ye variables hone zaroori hain
+display_logs = [] 
+gpti_val = 0.0
+trend = 0.0
+defcon = {"lv": "5", "ds": "INITIALIZING...", "clr": "#00D4FF", "bg": "rgba(0, 212, 255, 0.05)"}
+integrity = {"integrity_score": 0, "narrative_status": "SCANNING..."}
+panic_val = 0.0
+
+
+# ==========================================
+# 3. C2 COMMAND SIDEBAR (STRATEGIC OVERWATCH)
 # ==========================================
 with st.sidebar:
-    # --- Tactical Logo Section ---
+    # --- Tactical Branding (HUD Style) ---
     st.markdown("""
-        <div style="text-align: center; padding-bottom: 20px;">
-            <svg class="radar-icon" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#00ff41" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <div style="text-align: center; padding: 20px 0; background: rgba(0, 212, 255, 0.03); border-radius: 10px; margin-bottom: 25px; border: 1px solid rgba(0, 212, 255, 0.1);">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#00D4FF" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <path d="M12 2a10 10 0 1 0 10 10"></path>
                 <path d="M12 12L19 5"></path>
-                <circle cx="12" cy="12" r="3"></circle>
+                <circle cx="12" cy="12" r="1" fill="#00D4FF"></circle>
+                <path d="M12 7v5l3 3" opacity="0.5"></path>
             </svg>
-            <h2 style='font-family: "Share Tech Mono"; color: white; margin-top: 10px; letter-spacing: 2px;'>GEOSENTINEL</h2>
-            <p style='color: #00ff41; font-size: 10px; font-family: monospace;'>V2.5 LITE | ENCRYPTED</p>
+            <h2 style='font-family: "JetBrains Mono"; color: #F0F6FC; margin-top: 15px; font-size: 1.2rem; letter-spacing: 3px;'>GEOSENTINEL</h2>
+            <p style='color: #00D4FF; font-size: 9px; font-family: "JetBrains Mono"; letter-spacing: 1px;'>STRATEGIC COMMAND NODE | V3.0</p>
         </div>
     """, unsafe_allow_html=True)
 
-    # --- Theater Control ---
-    st.markdown('<p class="tactical-label">Primary Engagement Zone</p>', unsafe_allow_html=True)
+    # --- Theater Control (Primary Engagement) ---
+    st.markdown('<p class="tactical-label">Active Engagement Theater</p>', unsafe_allow_html=True)
     selected_zone = st.selectbox(
         "SELECT THEATER:", 
         list(CONFLICT_THEATERS.keys()),
         label_visibility="collapsed"
     )
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # --- System Metrics Card ---
-    st.markdown("""
-        <div class="sidebar-card">
-            <p class="tactical-label">System Health</p>
-            <div style="display: flex; justify-content: space-between; font-size: 12px;">
-                <span>Signal Strength</span><span style="color:#00ff41;">Excellent</span>
+    # --- System Metrics (C2 Health) ---
+    st.markdown(f"""
+        <div class="sidebar-intel-box" style="margin-bottom: 20px;">
+            <p class="tactical-label" style="border-left-color: #FF0055;">C2 Hardware Status</p>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+                <span style="color: #8B949E;">Satellite Sync</span><span style="color:#00ff41;">SECURE</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 5px;">
-                <span>Latency</span><span style="color:#00ff41;">42ms</span>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+                <span style="color: #8B949E;">NLU Latency</span><span style="color:#00D4FF;">28ms</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 5px;">
-                <span>Model</span><span style="color:#4CC9F0;">Gemini 2.5F</span>
+            <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                <span style="color: #8B949E;">Signal Nodes</span><span style="color:#00D4FF;">34 Active</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
-    # --- Parameters Section ---
-    st.markdown('<p class="tactical-label">Intelligence Tuning</p>', unsafe_allow_html=True)
+    # --- Intelligence Tuning (Parameters) ---
+    st.markdown('<p class="tactical-label">Neural Tuning</p>', unsafe_allow_html=True)
     with st.container():
-        sensitivity = st.slider("AI Signal Sensitivity", 0.0, 1.0, 0.85, help="Threshold for noise vs intelligence.")
-        st.markdown("<div style='margin-top: -15px;'></div>", unsafe_allow_html=True)
-        auto_refresh = st.checkbox("AUTOSYNC: Satellite Feed", value=True)
+        sensitivity = st.slider("SIGINT Sensitivity", 0.0, 1.0, 0.82, help="Filter for signal-to-noise ratio.")
+        st.markdown("<div style='margin-top: -10px;'></div>", unsafe_allow_html=True)
+        auto_sync = st.toggle("LIVE Satellite Feed", value=True)
         
-    st.markdown("---")
+    st.markdown("<hr style='border-color: rgba(255,255,255,0.05);'>", unsafe_allow_html=True)
 
-    # --- Force Action Button ---
-    if st.button("🚨 INITIALIZE DATA RESYNC", use_container_width=True):
-        with st.spinner("Re-syncing with global OSINT nodes..."):
+    # --- Force Action (Tactical Override) ---
+    if st.button("⚡ FORCE GLOBAL RESYNC", use_container_width=True):
+        with st.spinner("Flushing C2 Cache & Re-polling Nodes..."):
             st.cache_data.clear()
-            time.sleep(1) 
+            time.sleep(1.2) 
             st.rerun()
 
-    # --- Intelligence Export (Fixed Logic) ---
-    st.markdown('<p class="tactical-label">Report Generation</p>', unsafe_allow_html=True)
+    # --- Strategic Dossier Generation ---
+    st.markdown('<p class="tactical-label">Intelligence Export</p>', unsafe_allow_html=True)
     
-    # Pre-generate report content to avoid errors
+    # Advanced Report Logic
     safe_gpti = gpti_val if 'gpti_val' in locals() else 0.0
-    safe_sitrep = "Scan in progress..."
-    if 'ticker_data' in locals() and ticker_data:
-        safe_sitrep = ticker_data[0].get('sitrep', "Analyzing...")
-
+    safe_sitrep = display_logs[0].get('sitrep', "No active signals") if display_logs else "SCANNING..."
+    
     report_content = f"""
-    GEOSENTINEL TACTICAL DOSSIER
-    ----------------------------
+    CLASSIFIED: GEOSENTINEL STRATEGIC DOSSIER [TOP SECRET]
+    ======================================================
     THEATER: {selected_zone.upper()}
-    INTENSITY: {safe_gpti:.2f}
-    SITREP: {safe_sitrep}
-    TIMESTAMP: {datetime.now().strftime('%H:%M:%S')} UTC
+    REGISTRY: LKO-UP-IND-2026-ALPHA
+    TIMESTAMP: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC
+    
+    INTEL SUMMARY:
+    --------------
+    CONFLICT INTENSITY (GPTI): {safe_gpti:.2f}
+    THREAT POSTURE: DEFCON {defcon.get('lv', 'N/A')} ({defcon.get('ds', 'N/A')})
+    LATEST SIGINT: {safe_sitrep}
+    
+    ANALYTICS:
+    ----------
+    - Multi-Node Sentiment: ACTIVE
+    - Narrative Integrity: {integrity['integrity_score'] if 'integrity' in locals() else 'SCANNING'}%
+    - Public Panic Index: {panic_val if 'panic_val' in locals() else 'N/A'}%
+    
+    [END OF DOSSIER]
     """
 
     st.download_button(
-        label="📄 GENERATE STRATEGIC DOSSIER",
+        label="📄 DOWNLOAD STRATEGIC DOSSIER",
         data=report_content,
-        file_name=f"GeoSentinel_Report_{selected_zone.replace(' ', '_')}.txt",
+        file_name=f"GeoSentinel_Brief_{selected_zone.replace(' ', '_')}_{datetime.now().strftime('%H%M')}.txt",
         mime="text/plain",
         use_container_width=True,
-        help="Compile and download the latest intelligence packet."
+        help="Compile and export classified intelligence summary."
     )
 
-    # --- Fixed Footer Info (Inside Sidebar) ---
-    st.markdown("""
-        <div style="position: relative; margin-top: 50px; font-size: 10px; 
-                    color: #4b5563; font-family: 'Share Tech Mono', monospace; 
-                    background: rgba(13,17,23,0.5); padding: 5px; border-top: 1px solid #30363d;">
-            STATION: LKO-UP-IND-2026<br>
-            SECURITY: LEVEL 4 CLEARED<br>
-            [DASHBOARD-ALPHA-01]
+    # --- Sidebar Terminal Info ---
+    st.markdown(f"""
+        <div style="margin-top: 30px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 5px;">
+            <p style="font-size: 8px; color: #4B5563; font-family: 'JetBrains Mono'; margin: 0;">
+                STATION: LKO-UP-IND-2026<br>
+                AUTH: LEAD ARCHITECT (ARSHAD)<br>
+                SEC_LEVEL: 4 (UNCLASSIFIED DEMO)<br>
+                [LINK_STABLE: 100%]
+            </p>
         </div>
     """, unsafe_allow_html=True)
 
@@ -1039,28 +1063,30 @@ with st.expander("🔬 SYSTEM ARCHITECTURE & MATHEMATICAL MODEL"):
 # ==========================================
 # FINAL BRANDING FOOTER (STEALTH SIGNATURE)
 # ==========================================
-# FINAL SYSTEM SIGNATURE
-st.markdown(f"""
-    <div style="margin-top: 100px; padding: 30px 0; border-top: 1px solid rgba(0, 212, 255, 0.1); text-align: center;">
-        <div style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 10px;">
-            <div style="height: 1px; width: 50px; background: rgba(0, 212, 255, 0.2);"></div>
-            <span style="color: #4B5563; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase;">
-                Terminal End Transmission [EOT]
-            </span>
-            <div style="height: 1px; width: 50px; background: rgba(0, 212, 255, 0.2);"></div>
-        </div>
-        
-        <p style="color: #8B949E; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.8;">
-            <span style="color: #00D4FF;">GEOSENTINEL C2</span> | REGISTRY: <span style="color: #F0F6FC;">LKO-UP-IND-2026-ALPHA</span><br>
-            <span style="opacity: 0.6;">STATION STATUS:</span> <span style="color: #00ff41;">SECURE_ENCRYPTED</span> | 
-            <span style="opacity: 0.6;">CORE:</span> <span style="color: #00D4FF;">GEMINI-3-FLASH</span><br>
-            <span style="margin-top: 15px; display: block; font-size: 13px; letter-spacing: 1px;">
-                LEAD SYSTEMS ARCHITECT: <b style="color: #00D4FF; text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);">MOHD ARSHAD</b>
-            </span>
-        </p>
-        
-        <div style="margin-top: 20px; opacity: 0.3; font-size: 8px; color: #8B949E; font-family: 'JetBrains Mono';">
-            UNAUTHORIZED ACCESS TO SIGINT NODES IS STRICTLY PROHIBITED | 2026 © GEOSENTINEL DEFENSE SYSTEMS
-        </div>
+footer_html = """
+<div style="margin-top: 50px; padding: 30px 0; border-top: 1px solid rgba(0, 212, 255, 0.1); text-align: center; background-color: #05070a;">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 10px;">
+        <div style="height: 1px; width: 50px; background: rgba(0, 212, 255, 0.2);"></div>
+        <span style="color: #4B5563; font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase;">
+            Terminal End Transmission [EOT]
+        </span>
+        <div style="height: 1px; width: 50px; background: rgba(0, 212, 255, 0.2);"></div>
     </div>
-""", unsafe_allow_html=True)
+    
+    <p style="color: #8B949E; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.8;">
+        <span style="color: #00D4FF;">GEOSENTINEL C2</span> | REGISTRY: <span style="color: #F0F6FC;">LKO-UP-IND-2026-ALPHA</span><br>
+        <span style="opacity: 0.6;">STATION STATUS:</span> <span style="color: #00ff41;">SECURE_ENCRYPTED</span> | 
+        <span style="opacity: 0.6;">CORE:</span> <span style="color: #00D4FF;">GEMINI-3-FLASH</span><br>
+        <span style="margin-top: 15px; display: block; font-size: 13px; letter-spacing: 1px;">
+            LEAD SYSTEMS ARCHITECT: <b style="color: #00D4FF;">MOHD ARSHAD</b>
+        </span>
+    </p>
+    
+    <div style="margin-top: 20px; opacity: 0.3; font-size: 8px; color: #8B949E; font-family: 'Courier New';">
+        UNAUTHORIZED ACCESS TO SIGINT NODES IS STRICTLY PROHIBITED | 2026 © GEOSENTINEL DEFENSE SYSTEMS
+    </div>
+</div>
+"""
+
+# Rendering the component
+components.html(footer_html, height=250)
