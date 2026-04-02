@@ -1035,13 +1035,32 @@ with st.expander("🔬 SYSTEM ARCHITECTURE & MATHEMATICAL MODEL"):
     ➡️ PCA NORMALIZATION (Math Node) ➡️ GPTI CALCULATION ➡️ DEFCON TRIGGER ➡️ DASHBOARD
     """, language="text")
 
-# --- FINAL BRANDING FOOTER ---
+    
+# ==========================================
+# FINAL BRANDING FOOTER (STEALTH SIGNATURE)
+# ==========================================
+# FINAL SYSTEM SIGNATURE
 st.markdown(f"""
-    <div style="text-align: center; border-top: 1px solid #30363d; padding: 20px; margin-top: 50px;">
-        <p style="color: #4b5563; font-family: 'Share Tech Mono', monospace; font-size: 12px;">
-            GEOSENTINEL C2 | MISSION STATION: LKO-UP-IND-2026<br>
-            STATION STATUS: SECURE | ENCRYPTION: AES-256 ACTIVE<br>
-            <span style="color: #00ff41;">DEVELOPED BY MOHD ARSHAD</span>
+    <div style="margin-top: 100px; padding: 30px 0; border-top: 1px solid rgba(0, 212, 255, 0.1); text-align: center;">
+        <div style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 10px;">
+            <div style="height: 1px; width: 50px; background: rgba(0, 212, 255, 0.2);"></div>
+            <span style="color: #4B5563; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase;">
+                Terminal End Transmission [EOT]
+            </span>
+            <div style="height: 1px; width: 50px; background: rgba(0, 212, 255, 0.2);"></div>
+        </div>
+        
+        <p style="color: #8B949E; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.8;">
+            <span style="color: #00D4FF;">GEOSENTINEL C2</span> | REGISTRY: <span style="color: #F0F6FC;">LKO-UP-IND-2026-ALPHA</span><br>
+            <span style="opacity: 0.6;">STATION STATUS:</span> <span style="color: #00ff41;">SECURE_ENCRYPTED</span> | 
+            <span style="opacity: 0.6;">CORE:</span> <span style="color: #00D4FF;">GEMINI-3-FLASH</span><br>
+            <span style="margin-top: 15px; display: block; font-size: 13px; letter-spacing: 1px;">
+                LEAD SYSTEMS ARCHITECT: <b style="color: #00D4FF; text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);">MOHD ARSHAD</b>
+            </span>
         </p>
+        
+        <div style="margin-top: 20px; opacity: 0.3; font-size: 8px; color: #8B949E; font-family: 'JetBrains Mono';">
+            UNAUTHORIZED ACCESS TO SIGINT NODES IS STRICTLY PROHIBITED | 2026 © GEOSENTINEL DEFENSE SYSTEMS
+        </div>
     </div>
 """, unsafe_allow_html=True)
